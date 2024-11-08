@@ -1,0 +1,465 @@
+﻿@page "/cashier"
+@attribute [StreamRendering(true)]
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject ILocalStorageService Loc
+@using System.Net.Http.Headers
+@inject JSPrintManager JSPrintManager
+@inject IJSRuntime JS
+
+<PageTitle>Index</PageTitle>
+
+<style>
+
+    /* Custom CSS for mobile view */
+    @@media (max-width: 767px) {
+        .container .row {
+            --bs-gutter-x: 1.5rem;
+            --bs-gutter-y: 1rem;
+        }
+
+            .container .row > .col {
+                flex: 0 0 auto;
+                width: 50%;
+            }
+    }
+
+    .card-img-top {
+        height: 100%;
+        width: auto;
+    }
+    /* Existing CSS */
+    .d-flex {
+        padding-top: 250px;
+    }
+</style>
+
+
+@if (p == null || p.Length == 0)
+{
+    <div class="d-flex justify-content-center my-4">
+        <div class="loader"></div>
+    </div>
+}
+else
+{
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-sm-6" Style="max-height: 700px; overflow-y: scroll">
+                <div class="container">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        @foreach (var product in p.Take(currentIndex))
+                        {
+                            <div class="col">
+                                <div class="card h-100">
+                                    <img src="data:image/bmp;base64, @(Convert.ToBase64String(product.photo))" class="card-img-top" alt="@product.name">
+                                    <div class="card-body">
+                                        <h4 class="card-title" style="font-size:17px;">@product.name</h4>
+                                        <h5 class="card-title" style="font-size:12px;">@product.code</h5>
+                                        <p class="card-title">₱@product.price</p>
+                                        @if (product.status == "Available")
+                                        {
+                                            <MudChip T="string" Color="Color.Info" Size="Size.Small">@product.status</MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudChip T="string" Color="Color.Error" Size="Size.Small">@product.status</MudChip>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <br />
+                    <br />
+
+                    @if (currentIndex < p.Length)
+                    {
+                        <div class="text-center">
+                            <MudButton Disabled="@_loading" OnClick="@loadMore" Variant="Variant.Filled" Color="Color.Secondary">
+                                @if (_loading)
+                                {
+                                    <div class="loader"></div>
+                                }
+                                else
+                                {
+                                    <MudText>Load More</MudText>
+                                }
+                            </MudButton>
+                        </div>
+                    }
+                </div>
+            </div>
+            <!-- Right Column -->
+            <div class="col-sm-6">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-sm-12">
+                          <!--//-->
+                        </div>
+                        <div class="col-sm-12">
+                            <style>
+                                /* General table styling */
+                                .table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    height: 500px; /* Fixed height */
+                                    overflow-y: auto; /* Enable vertical scrolling */
+                                    display: block; /* Allow overflow scrolling */
+                                }
+
+                                    /* Remove borders from table, headers, and cells */
+                                    .table, .table th, .table td {
+                                        border: none;
+                                    }
+
+                                        /* Table header styling */
+                                        .table th {
+                                            color: #333;
+                                            font-weight: bold;
+                                            padding: 10px;
+                                            text-align: left;
+                                        }
+
+                                        /* Table row styling */
+                                        .table td {
+                                            padding: 10px;
+                                            color: #555;
+                                        }
+
+                                        /* Ensure the tbody is scrollable */
+                                        .table tbody {
+                                            display: block; /* Allows the body to scroll */
+                                            height: 450px; /* Total height - header height */
+                                            overflow-y: auto; /* Enable vertical scrolling */
+                                        }
+
+                                        .table tr {
+                                            display: table; /* Ensure table rows are displayed correctly */
+                                            table-layout: fixed; /* Maintain layout */
+                                            width: 100%; /* Full width */
+                                        }
+                            </style>
+                            <MudTable Class="ma-5" Dense="true" Hover="true" Items="@t" HorizontalScrollbar="true"
+                                      FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "520px" : "")">
+                                <HeaderContent>
+                                    <MudTh>Code</MudTh>
+                                    <MudTh>Name</MudTh>
+                                    <MudTh>Price</MudTh>
+                                    <MudTh>Qty</MudTh>
+                                    <MudTh>SubTotal</MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate>
+                                    <MudTd DataLabel="Code">@context.code</MudTd>
+                                    <MudTd DataLabel="Name">@context.name</MudTd>
+                                    <MudTd DataLabel="Price">@context.price</MudTd>
+                                    <MudTd DataLabel="Qty">@context.quantity</MudTd>
+                                    <MudTd DataLabel="Subtotal">@context.total</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Print Using JSPrintManager-->
+                <div>
+                    @if (JSPrintManager.Status == JSPMWSStatus.Open)
+                    {
+                        <span class="badge badge-success">
+                            <i class="fa fa-check" /> Open
+                        </span>
+                    }
+                    else if (JSPrintManager.Status == JSPMWSStatus.Closed)
+                    {
+                        <span class="badge badge-danger">
+                            <i class="fa fa-exclamation-circle" /> Closed!
+                        </span>
+                        <div>
+                            <strong>JSPrintManager (JSPM) App</strong> is not installed or not running! 
+                            <a href="https://neodynamic.com/downloads/jspm" target="_blank">Download JSPM Client App...</a>
+                        </div>
+                    }
+                    else if (JSPrintManager.Status == JSPMWSStatus.Blocked)
+                    {
+                        <span class="badge badge-warning">
+                            <i class="fa fa-times-circle" /> This Website is Blocked!
+                        </span>
+                    }
+                    else if (JSPrintManager.Status == JSPMWSStatus.WaitingForUserResponse)
+                    {
+                        <span class="badge badge-warning">
+                            <i class="fa fa-user-circle" /> Waiting for user response...
+                        </span>
+                    }
+                </div>
+
+                @if (JSPrintManager.Status == JSPMWSStatus.Open)
+                {
+                    @if (JSPrintManager.Printers == null)
+                    {
+                        <hr />
+                        <div class="spinner-border text-info" role="status">
+                            <span class="sr-only">Please wait...</span>
+                        </div>
+                        <strong><em>Getting local printers...</em></strong>
+                    }
+                    else
+                    {
+                      //
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+@code {
+    bool fixed_header = true;
+    bool fixed_footer = false;
+    private products[] p;
+    private temp[]? t;
+
+    [Parameter]
+    public products _prod { get; set; } = new products();
+    private int currentIndex = 12;
+    private const int PageSize = 12;
+    private bool _loading = false;
+    private string txtsearch { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadProduct();
+            await RegisterKeyDown();
+            await LoadTemp();
+        }
+    }
+
+    private async Task LoadProduct()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var response = await client.GetAsync($"api/Product/Products");
+                if (response.IsSuccessStatusCode)
+                {
+                    await Task.Delay(1000);
+                    var contentResponse = await response.Content.ReadAsStringAsync();
+                    p = JsonConvert.DeserializeObject<products[]>(contentResponse);
+                    StateHasChanged();
+                }
+                else
+                {
+                    // Handle error
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+        }
+    }
+
+    private async Task<IEnumerable<products>> GetProduct(string value, CancellationToken token)
+    {
+        HttpClient httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri($"{Nav.BaseUri}");
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+        await Loc.GetItemAsStringAsync("token"));
+        var p = await httpClient.GetFromJsonAsync<List<products>>($"api/Product/SProduct?s={value}");
+        return p;
+    }
+
+    private async void loadMore()
+    {
+        _loading = true;
+        await Task.Delay(1000);
+        currentIndex = Math.Min(currentIndex + PageSize, p.Length);
+        StateHasChanged();
+    }
+    public async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(txtsearch))
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                    var response = await client.GetAsync($"api/Product/Products");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await Task.Delay(1000);
+                        var contentResponse = await response.Content.ReadAsStringAsync();
+                        p = JsonConvert.DeserializeObject<products[]>(contentResponse);
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        // Handle error
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+            }
+        }
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage response = await client.GetAsync($"api/Product/Search?search={txtsearch}");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentrespose = await response.Content.ReadAsStringAsync();
+                p = JsonConvert.DeserializeObject<products[]>(contentrespose);
+                StateHasChanged();
+            }
+            else
+            {
+                // Handle error
+            }
+        }
+    }
+
+
+    //Print Receipt
+    // JavaScript function to call DoSomething when Shift + P is pressed
+    private async Task RegisterKeyDown()
+    {
+        await JS.InvokeVoidAsync("registerShortcut", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public void ExecuteShortcut()
+    {
+        DoPrint();
+    }
+
+    // An Installed Printer instance
+    private InstalledPrinter MyPrinter { get; set; } = new();
+    // Use default printer?
+    private bool UseDefaultPrinter = true;
+
+    // Printing...
+    private async Task LoadTemp()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var response = await client.GetAsync($"api/Temp/Temp");
+                if (response.IsSuccessStatusCode)
+                {
+                    await Task.Delay(1000);
+                    var contentResponse = await response.Content.ReadAsStringAsync();
+                    t = JsonConvert.DeserializeObject<temp[]>(contentResponse);
+                    StateHasChanged();
+                }
+                else
+                {
+                    // Handle error
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+        }
+    }
+
+    private async void DoPrint()
+    {
+        // Check if JSPM Client App is up and running
+        if (JSPrintManager.Status == JSPMWSStatus.Open)
+        {
+            // Create a ClientPrintJob
+            var cpj = new ClientPrintJob();
+            // Set target Printer
+            cpj.ClientPrinter = UseDefaultPrinter ? new DefaultPrinter() : MyPrinter;
+
+            // Create ESC/POS commands
+            char esc = (char)0x1B; // ESC byte in hex notation
+            char newLine = (char)0x0A; // LF byte in hex notation
+            string cmds = esc + "@"; // Initializes the printer (ESC @)
+
+            // Set smaller font size (approximately size 8)
+            cmds += esc + "!" + (char)0x01; // Condensed mode for small font size
+
+            // Header
+            cmds += "DURIAN GARDEN" + newLine;
+            cmds += "Product       Qty   Price  Total" + newLine;
+            cmds += "--------------------------------" + newLine;
+
+            // Load and print products
+            await LoadTemp();
+            if (t != null)
+            {
+                foreach (var temp in t)
+                {
+                    cmds += $"{temp.name,-12} {temp.quantity,3} {temp.price,7:F2} {temp.total,7:F2}" + newLine;
+                }
+            }
+
+            // Print timestamp
+            cmds += newLine + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + newLine;
+
+            // Set the RAW commands to send to the printer
+            cpj.PrinterCommands = cmds;
+
+            // Send print job
+            JSPrintManager.SendClientPrintJob(cpj);
+        }
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Handle OnGetPrinters event...
+            JSPrintManager.OnGetPrinters += () =>
+            {
+                if (JSPrintManager.Printers != null &&
+                    JSPrintManager.Printers.Length > 0)
+                {
+                    // Display installed printers...
+                    StateHasChanged();
+                }
+                else
+                {
+                    Console.WriteLine("No printers found...");
+                }
+
+            };
+
+            // Handle OnStatusChanged event to detect any WSS status change
+            JSPrintManager.OnStatusChanged += () =>
+            {
+                StateHasChanged();
+
+                // Status = Open means that JSPM Client App is up and running!
+                if (JSPrintManager.Status == JSPMWSStatus.Open)
+                {
+                    //Try getting local printers...
+                    JSPrintManager.TryGetPrinters();
+                }
+            };
+
+            // Start WebSocket comm
+            JSPrintManager.Start();
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
+}
