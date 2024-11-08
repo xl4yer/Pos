@@ -9,5 +9,6 @@
         public int quantity { get; set; }
         public double price { get; set; }
         public double total { get; set; }
+        public double total_price { get; set; }
     }
 }

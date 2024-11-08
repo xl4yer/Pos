@@ -37,5 +37,11 @@ namespace Pos.Controllers
             return ret;
         }
 
+        [HttpGet]
+        public async Task<double> Total()
+        {
+            return await xservices.Total();
+        }
+
     }
 }

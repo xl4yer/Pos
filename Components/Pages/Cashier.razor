@@ -6,6 +6,7 @@
 @using System.Net.Http.Headers
 @inject JSPrintManager JSPrintManager
 @inject IJSRuntime JS
+@inject ISnackbar SnackBar
 
 <PageTitle>Index</PageTitle>
 
@@ -46,11 +47,13 @@ else
     <div class="container mt-5">
         <div class="row">
             <!-- Left Column -->
-            <div class="col-sm-6" Style="max-height: 700px; overflow-y: scroll">
+            <div class="col-sm-6" Style="max-height: 650px; overflow-y: scroll">
                 <div class="container">
+                         
                     <div class="row row-cols-1 row-cols-md-3 g-4">
                         @foreach (var product in p.Take(currentIndex))
                         {
+
                             <div class="col">
                                 <div class="card h-100">
                                     <img src="data:image/bmp;base64, @(Convert.ToBase64String(product.photo))" class="card-img-top" alt="@product.name">
@@ -140,9 +143,17 @@ else
                                             table-layout: fixed; /* Maintain layout */
                                             width: 100%; /* Full width */
                                         }
+
+                                        .mt-3{
+                                            border-radius:10px;
+                                        }
                             </style>
-                            <MudTable Class="ma-5" Dense="true" Hover="true" Items="@t" HorizontalScrollbar="true"
-                                      FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "520px" : "")">
+                                <MudToolBar>
+                                <MudTextField @bind-Value="_temp.code" Placeholder="Input product code here..." Margin="Margin.Dense" Variant="Variant.Outlined" 
+                                                @onkeypress="HandleKeyPress" AutoFocus @ref="inputElement"></MudTextField>
+                                </MudToolBar>
+                            <MudTable Class="ma-5" Dense="true" Elevation="0" Hover="true" Items="@t" HorizontalScrollbar="true" Style="overflow-y: scroll"
+                                      FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "400px" : "")">
                                 <HeaderContent>
                                     <MudTh>Code</MudTh>
                                     <MudTh>Name</MudTh>
@@ -155,10 +166,14 @@ else
                                     <MudTd DataLabel="Code">@context.code</MudTd>
                                     <MudTd DataLabel="Name">@context.name</MudTd>
                                     <MudTd DataLabel="Price">@context.price</MudTd>
-                                    <MudTd DataLabel="Qty">@context.quantity</MudTd>
+                                    <MudTd DataLabel="Qty"><b>@context.quantity</b></MudTd>
                                     <MudTd DataLabel="Subtotal">@context.total</MudTd>
                                 </RowTemplate>
                             </MudTable>
+                            <MudToolBar>
+                                <MudSpacer/>
+                                <MudText Typo="Typo.h6" Align="Align.Right">Total:<br /> <u>@_total</u></MudText>
+                            </MudToolBar>
                         </div>
                     </div>
                 </div>
@@ -215,21 +230,20 @@ else
     </div>
 }
 
-
-
-
 @code {
     bool fixed_header = true;
     bool fixed_footer = false;
     private products[] p;
     private temp[]? t;
-
+    private MudTextField<string>? inputElement;
     [Parameter]
     public products _prod { get; set; } = new products();
+    public temp _temp { get; set; } = new temp();
     private int currentIndex = 12;
     private const int PageSize = 12;
     private bool _loading = false;
     private string txtsearch { get; set; } = string.Empty;
+    public double _total { get; set; } = 0;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -238,7 +252,88 @@ else
             await LoadProduct();
             await RegisterKeyDown();
             await LoadTemp();
+            await Total();
         }
+    }
+
+    public async Task Total()
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage response = await client.GetAsync($"api/Temp/Total");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentResponse = await response.Content.ReadAsStringAsync();
+                _total = JsonConvert.DeserializeObject<double>(contentResponse);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs args)
+    {
+        string clipboardText = await JS.InvokeAsync<string>("navigator.clipboard.readText");
+        string result = clipboardText.Trim();
+        if (args.Key == "Enter")
+        {
+            await Submit();
+        }
+    }
+    private async Task Submit()
+    {
+        try
+        {
+            var _t = new temp
+                {
+                    code = _temp.code,
+                    quantity = 1
+                };
+
+            using (HttpClient client2 = new HttpClient())
+            {
+                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var jsonBody = JsonConvert.SerializeObject(_t);
+                HttpContent requestBody = new StringContent(jsonBody);
+                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+                HttpResponseMessage response = await client2.PostAsync("api/Temp/AddTemp", requestBody);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int i = JsonConvert.DeserializeObject<int>(responseContent);
+
+                    if (i > 0)
+                    {
+                        StateHasChanged();
+                        await LoadTemp();
+                        // await PhilSms();
+                        await JS.InvokeVoidAsync("document.activeElement.blur");
+                        await Clear();
+                        await inputElement.FocusAsync();
+                    }
+                }
+                else
+                {
+                    StateHasChanged();
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    await JS.InvokeVoidAsync("document.activeElement.blur");
+                    await Clear();
+                    await inputElement.FocusAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+        }
+    }
+
+    private async Task Clear()
+    {
+        _temp.code = null;
     }
 
     private async Task LoadProduct()

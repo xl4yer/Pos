@@ -34,7 +34,7 @@ namespace Pos.Services
                         t.Add(new temp
                         {
                             tempID = Convert.ToInt32(rdr["tempID"]),
-                            date = Convert.ToDateTime( rdr["date"]),
+                            date = Convert.ToDateTime(rdr["date"]),
                             code = rdr["code"].ToString(),
                             name = rdr["name"].ToString(),
                             price = Convert.ToDouble(rdr["price"]),
@@ -111,6 +111,20 @@ namespace Pos.Services
             }
             return 0;
         }
+        public async Task<double> Total()
+        {
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                await con.OpenAsync().ConfigureAwait(false);
+                var com = new MySqlCommand("TotalPrice", con)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+                return Convert.ToInt32(await com.ExecuteScalarAsync().ConfigureAwait(false));
+            }
+        }
 
     }
+   
 }
+
