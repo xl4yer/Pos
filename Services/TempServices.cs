@@ -111,6 +111,33 @@ namespace Pos.Services
             }
             return 0;
         }
+
+        public async Task<int> DeleteTemp(temp t)
+        {
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("DeleteTemp", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    com.Parameters.AddWithValue("_tempID", t.tempID);
+                    return await com.ExecuteNonQueryAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception here
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return 0;
+        }
+
         public async Task<double> Total()
         {
             using (var con = new MySqlConnection(_constring.GetConnection()))

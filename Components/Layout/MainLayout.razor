@@ -9,22 +9,96 @@
                    @rendermode="RenderMode.InteractiveServer" />
 <MudSnackbarProvider @rendermode="RenderMode.InteractiveServer" />
 
+<style>
+    /*Logout icon*/
+    .img2 {
+        width: 35px;
+        border-radius: 50px;
+        float: left;
+    }
+
+    .logout {
+        font-size: .8em;
+        font-family: 'Oswald', sans-serif;
+        position: relative;
+        right: -18px;
+        bottom: -10px;
+        overflow: hidden;
+        letter-spacing: 3px;
+        opacity: 0;
+        transition: opacity .45s;
+        -webkit-transition: opacity .35s;
+        color: white;
+    }
+
+    .button {
+        text-decoration: none;
+        float: right;
+        padding: 12px;
+        margin: 15px;
+        color: white;
+        width: 50px;
+        transition: width .35s;
+        -webkit-transition: width .35s;
+        overflow: hidden;
+    }
+
+    a:hover {
+        width: 130px;
+    }
+
+        a:hover .logout {
+            opacity: .9;
+        }
+
+    a {
+        text-decoration: none;
+    }
+
+    /* Responsive Styles */
+    @@media (max-width: 600px) {
+        .img2 {
+            width: 25px;
+        }
+
+        .button {
+            padding: 8px;
+            margin: 10px;
+            width: 40px;
+        }
+
+        a:hover {
+            width: 100px;
+        }
+
+        .logout {
+            font-size: .7em;
+            right: -12px;
+            bottom: -8px;
+        }
+    }
+</style>
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
+       @*  <div class="top-row px-4">
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-     @*  <MudPaper class="top-row px-4" Elevation="1">
-    <MudToolBar>
-        <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
-    </MudToolBar>
-    </MudPaper> *@
-
-
+        </div> *@
+        <MudToolBar Style="border-bottom:solid gray 0.5px;" class="top-row px-4">
+            <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="mr-5" />
+            <MudText Align="Align.Left"><b>POS</b></MudText>
+            <MudSpacer />
+            <div class="navigation">
+                <a class="button" href="">
+                   @*  <img class="img2" src="cashier.png"> *@
+                    <div class="logout" style="color:black">LOGOUT</div>
+                </a>
+            </div>
+        </MudToolBar>
         <article class="content px-4">
             @Body
         </article>

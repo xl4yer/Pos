@@ -8,6 +8,7 @@
 @inject IDialogService Dialog
 
 <PageTitle>Products</PageTitle>
+
 <style type="text/css">
     .centered {
         display: flex;
@@ -20,7 +21,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        /*   height: 80vh; */
+        /* height: 80vh; */
     }
 
     .img {
@@ -38,6 +39,7 @@
         font-weight: 500;
     }
 </style>
+
 <div class="container mt-5">
     <div class="row">
         @if (p != null && p.Any())
@@ -90,7 +92,7 @@
                         <MudTh>Product Name</MudTh>
                         <MudTh>Price</MudTh>
                         <MudTh>Status</MudTh>
-                        <MudTh></MudTh>
+                        <MudTh>Actions</MudTh>
                     </HeaderContent>
 
                     <RowTemplate>
@@ -112,7 +114,7 @@
                         </MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Update" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" @onclick="(e => UpdateProduct(context.productID))" />
-                              <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -132,6 +134,7 @@
     </div>
 </div>
 
+
 @code {
     private products[]? p;
     [Parameter] public products _p { get; set; } = new products();
@@ -146,6 +149,8 @@
     [Parameter] public string imgsrc { get; set; } = "";
     [Parameter] public byte[] _filebytes { get; set; } = null;
     [Parameter] public byte[] _photo { get; set; } = null;
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+    public bool def { get; set; }
 
     public void OnValidSubmit(EditContext context)
     {
@@ -160,8 +165,6 @@
         }
     }
 
-    IList<IBrowserFile> files = new List<IBrowserFile>();
-    public bool def { get; set; }
     private async void UploadFiles(IBrowserFile file)
     {
         def = true;
@@ -181,6 +184,7 @@
         parameters.Add("p", update);
         var dialog = await Dialog.Show<UpdateProduct>("Update Product", parameters).Result;
     }
+
     private async Task clearImg()
     {
         var photos = GetImage(img64);
@@ -200,6 +204,7 @@
         return bytes;
 
     }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -207,6 +212,7 @@
             await LoadProduct();
         }
     }
+
     private async Task LoadProduct()
     {
         try

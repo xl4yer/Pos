@@ -11,6 +11,7 @@ namespace Pos.Models
         public double _price { get; set; }
         public string code { get; set; } = "";
         public string status { get; set; } = "";
+        public int qty { get; set; }
         public string price
         {
             get { return _price.ToString("0.00"); }
