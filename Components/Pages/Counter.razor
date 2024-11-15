@@ -8,6 +8,7 @@
 @inject JSPrintManager JSPrintManager
 @inject IJSRuntime JS
 @inject ISnackbar SnackBar
+@inject IDialogService Dialog
 
 <PageTitle>Counter</PageTitle>
 
@@ -272,30 +273,39 @@ else
                                     {
                                         <span class="chip" style="background-color: #e74c3c; color: white;">@product.status</span>
                                     }
-
+                                    @if (product.status == "Available"){
+                                        <MudNumericField T="int"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         @bind-Value="_qty" />
+                                    }
+                                    else{
+                                        <MudNumericField T="int"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Disabled
+                                                         @bind-Value="_qty" />
+                                    }
                                     <!-- Add to Cart Button -->
-                                    <MudNumericField T="int"
-                                                     Variant="Variant.Outlined"
-                                                     Margin="Margin.Dense"
-                                                     @bind-Value="_prod.qty" />
+                                   
 
                                     @if (product.status == "Available")
                                     {
                                         <MudFab StartIcon="@Icons.Material.Filled.AddShoppingCart"
-                                                Label="Add to Cart"
-                                                Size="Size.Small"
-                                                Color="Color.Primary"
-                                                @onclick="(e => AddToCart(product.code))"
-                                                style="font-size: 12px; margin-top: 10px;" />
+                                        Label="Add to Cart"
+                                        Size="Size.Small"
+                                        Color="Color.Primary"
+                                        @onclick="(e => AddToCart(product.code))"
+                                        style="font-size: 12px; margin-top: 10px;" />
                                     }
                                     else
                                     {
                                         <MudFab StartIcon="@Icons.Material.Filled.AddShoppingCart"
-                                                Label="Add to Cart"
-                                                Size="Size.Small"
-                                                Disabled
-                                                Color="Color.Primary"
-                                                style="font-size: 12px; margin-top: 10px;" />
+                                        Label="Add to Cart"
+                                        Size="Size.Small"
+                                        Disabled
+                                        Color="Color.Primary"
+                                        style="font-size: 12px; margin-top: 10px;" />
                                     }
 
                                 </div>
@@ -326,17 +336,23 @@ else
             <!-- Right Column (Cart and Summary) -->
             <div class="col-md-6 mt-5">
                 <div class="container">
-                    <MudCard Elevation="1">
+                    <MudCard Elevation="0" Style="padding: 15px; font-family: monospace;">
+                        <!-- Input Toolbar -->
                         <MudToolBar>
                             <MudTextField @bind-Value="_temp.code"
+                                          Style="font-family:monospace; font-size: 16px;"
                                           Placeholder="Input product code here..."
                                           Margin="Margin.Dense"
                                           Variant="Variant.Outlined"
                                           @onkeypress="HandleKeyPress"
-                                          AutoFocus @ref="inputElement">
+                                          AutoFocus
+                                          @ref="inputElement">
                             </MudTextField>
                         </MudToolBar>
-                        @if (t != null && t.Any()){
+
+                        <!-- Table displaying transaction items -->
+                        @if (t != null && t.Any())
+                        {
                             <MudTable Class="ma-5" Dense="true" Elevation="0"
                                       Hover="true" Items="@t" HorizontalScrollbar="true"
                                       FixedHeader="@fixed_header" FixedFooter="@fixed_footer"
@@ -349,36 +365,43 @@ else
                                     <MudTh></MudTh>
                                 </HeaderContent>
                                 <RowTemplate>
-                                    <MudTd DataLabel="Product Name">@context.name</MudTd>
-                                    <MudTd DataLabel="Price">@context.price</MudTd>
+                                    <MudTd DataLabel="Product Name" Style="font-size: 14px;">@context.name</MudTd>
+                                    <MudTd DataLabel="Price" Style="font-size: 14px;">₱@context.price</MudTd>
                                     <MudTd>
                                         <MudNumericField T="int"
                                                          Variant="Variant.Outlined"
                                                          Margin="Margin.Dense"
-                                                         Style="width:60px; height:30px;"
+                                                         Style="width: 60px; height: 22px; font-size: 14px;"
                                                          Value="@context.quantity"
                                                          ValueChanged="@((_value) => UpdateQuantity(context.tempID, _value))"
                                                          Immediate="true" />
                                     </MudTd>
-                                    <MudTd DataLabel="Subtotal">₱@context.total</MudTd>
+                                    <MudTd DataLabel="Subtotal" Style="font-size: 14px;">₱@context.total</MudTd>
                                     <MudTd>
                                         <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                        Variant="Variant.Filled"
                                                        Color="Color.Error"
                                                        Size="Size.Small"
+                                                       Style="width:20px; height:20px;"
                                                        @onclick="(e => DeleteTemp(context.tempID))" />
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>
                         }
-                        else{
-                            <MudText Align="Align.Center">No Transactions Found</MudText>
+                        else
+                        {
+                            <MudText Align="Align.Center" Style="font-family:monospace; font-size: 16px;">No Transactions Found</MudText>
                         }
+
+                        <!-- Total Price -->
                         <MudToolBar>
                             <MudSpacer />
-                            <MudText Typo="Typo.h6" Align="Align.Right">Total: <u>₱@_total</u></MudText>
+                            <MudText Typo="Typo.h6" Align="Align.Right" Style="font-size: 20px; font-family: monospace;">
+                                Total: <u>₱@_total</u>
+                            </MudText>
                         </MudToolBar>
                     </MudCard>
+
                 </div>
 
                 <!-- Print Status -->
@@ -431,8 +454,14 @@ else
     private string txtsearch { get; set; } = string.Empty;
     public double _total { get; set; } = 0;
     private int _value { get; set; }
+
     private int _qty { get; set; }
-   
+
+    public class Quantities
+    {
+        public int _qty { get; set; }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -465,16 +494,17 @@ else
         string result = clipboardText.Trim();
         if (args.Key == "Enter")
         {
-            await Submit();
+            await AddToCartBarCode();
         }
     }
-    private async Task Submit()
+    private async Task AddToCartBarCode()
     {
         try
         {
             var _t = new temp
                 {
                     code = _temp.code,
+                    date = DateTime.Now,
                     quantity = 1
                 };
 
@@ -497,6 +527,7 @@ else
                     {
                         StateHasChanged();
                         await LoadTemp();
+                        await Total();
                         await JS.InvokeVoidAsync("document.activeElement.blur");
                         await Clear();
                         await inputElement.FocusAsync();
@@ -524,9 +555,9 @@ else
         {
             var _t = new temp
                 {
-                     code = code,
-                     quantity = _prod.qty,
-                     date = DateTime.Now
+                    code = code,
+                    quantity = _qty,
+                    date = DateTime.Now
                 };
 
             using (HttpClient client2 = new HttpClient())
@@ -548,6 +579,7 @@ else
                     {
                         StateHasChanged();
                         await LoadTemp();
+                        await Total();
                     }
                 }
                 else
@@ -612,48 +644,7 @@ else
 
     private async Task DeleteTemp(int tempID)
     {
-        try
-        {
-
-            var _t = new temp
-                {
-                    tempID = tempID,  // Use the passed tempID
-                };
-
-            using (HttpClient client2 = new HttpClient())
-            {
-                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
-                var jsonBody = JsonConvert.SerializeObject(_t);
-                HttpContent requestBody = new StringContent(jsonBody);
-                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
-                    await Loc.GetItemAsStringAsync("token"));
-                HttpResponseMessage response = await client2.PostAsync("api/Temp/DeleteTemp", requestBody);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseContent = await response.Content.ReadAsStringAsync();
-                    int i = JsonConvert.DeserializeObject<int>(responseContent);
-
-                    if (i > 0)
-                    {
-                        StateHasChanged();
-                        await LoadTemp();
-                        await Total();
-                    }
-                }
-                else
-                {
-                    StateHasChanged();
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Handle exception if necessary
-            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-        }
+        //
     }
 
 
@@ -752,26 +743,6 @@ else
         }
     }
 
-
-    //Print Receipt
-    // JavaScript function to call DoSomething when Shift + P is pressed
-    private async Task RegisterKeyDown()
-    {
-        await JS.InvokeVoidAsync("registerShortcut", DotNetObjectReference.Create(this));
-    }
-
-    [JSInvokable]
-    public void ExecuteShortcut()
-    {
-        DoPrint();
-    }
-
-    // An Installed Printer instance
-    private InstalledPrinter MyPrinter { get; set; } = new();
-    // Use default printer?
-    private bool UseDefaultPrinter = true;
-
-    // Printing...
     private async Task LoadTemp()
     {
         try
@@ -798,6 +769,30 @@ else
             // Handle exception
         }
     }
+
+    //Print Receipt
+    // JavaScript function to call DoSomething when Shift + P is pressed
+    private async Task RegisterKeyDown()
+    {
+        await JS.InvokeVoidAsync("registerShortcut", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public void ExecuteShortcut()
+    {
+       Print();
+    }
+
+    public async Task Print()
+    {
+        var parameters = new DialogParameters();
+        var dialog = await Dialog.Show<Print>("Total Bill", parameters).Result;
+    }
+
+    // An Installed Printer instance
+    private InstalledPrinter MyPrinter { get; set; } = new();
+    // Use default printer?
+    private bool UseDefaultPrinter = true;
 
     private async void DoPrint()
     {

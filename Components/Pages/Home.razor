@@ -182,16 +182,40 @@
                 if (code.Count > 0)
                 {
                     u.Add(new users()
-                    {
-                        userID = code[0].userID,
-                        token = code[0].token,
-                        name = code[0].name,
-                        username = code[0].username,
-                    });
+                        {
+                            userID = code[0].userID,
+                            token = code[0].token,
+                            name = code[0].name,
+                            username = code[0].username,
+                            role = code[0].role
+                        });
 
+                    // Save token to local storage
                     await LocalStorage.SetItemAsStringAsync("token", u[0].token);
-                    Nav.NavigateTo("/products");
+
+                    // Check the role and navigate accordingly
+                    if (u[0].role.ToLower() == "cashier")
+                    {
+                        Nav.NavigateTo("/counter");
+                    }
+                    else if (u[0].role.ToLower() == "admin")
+                    {
+                        Nav.NavigateTo("/products");
+                    }
+                    else
+                    {
+                        // Handle unexpected roles if needed, or log out the user
+                        // Optionally, you can show an error or notification for unsupported roles
+                    }
                 }
+                else
+                {
+                    // Handle case where no user is found, e.g., show an error message
+                }
+            }
+            else
+            {
+                // Handle failed API call, possibly show an error message to the user
             }
         }
     }
