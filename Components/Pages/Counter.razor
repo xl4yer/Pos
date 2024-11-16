@@ -277,14 +277,14 @@ else
                                         <MudNumericField T="int"
                                                          Variant="Variant.Outlined"
                                                          Margin="Margin.Dense"
-                                                         @bind-Value="_qty" />
+                                                         @bind-Value="product.qty" />
                                     }
                                     else{
                                         <MudNumericField T="int"
                                                          Variant="Variant.Outlined"
                                                          Margin="Margin.Dense"
                                                          Disabled
-                                                         @bind-Value="_qty" />
+                                                         @bind-Value="product.qty" />
                                     }
                                     <!-- Add to Cart Button -->
                                    
@@ -295,7 +295,7 @@ else
                                         Label="Add to Cart"
                                         Size="Size.Small"
                                         Color="Color.Primary"
-                                        @onclick="(e => AddToCart(product.code))"
+                                        @onclick="(e => AddToCart(product.code, product.qty))"
                                         style="font-size: 12px; margin-top: 10px;" />
                                     }
                                     else
@@ -390,7 +390,9 @@ else
                         }
                         else
                         {
-                            <MudText Align="Align.Center" Style="font-family:monospace; font-size: 16px;">No Transactions Found</MudText>
+                            <MudText Align="Align.Center" Style="font-family:monospace; font-size: 25px;">
+                                No Transactions Found
+                                </MudText>
                         }
 
                         <!-- Total Price -->
@@ -549,14 +551,14 @@ else
         }
     }
 
-    private async Task AddToCart(string code)
+    private async Task AddToCart(string code, int qty)
     {
         try
         {
             var _t = new temp
                 {
                     code = code,
-                    quantity = _qty,
+                    quantity = qty,
                     date = DateTime.Now
                 };
 
@@ -774,11 +776,11 @@ else
     // JavaScript function to call DoSomething when Shift + P is pressed
     private async Task RegisterKeyDown()
     {
-        await JS.InvokeVoidAsync("registerShortcut", DotNetObjectReference.Create(this));
+        await JS.InvokeVoidAsync("ctrlP", DotNetObjectReference.Create(this));
     }
 
     [JSInvokable]
-    public void ExecuteShortcut()
+    public void ctrlPShortcut()
     {
        Print();
     }

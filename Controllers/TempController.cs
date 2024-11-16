@@ -44,6 +44,13 @@ namespace Pos.Controllers
             return ret;
         }
 
+        [HttpPost]
+        public async Task<int> TempToPurchase()
+        {
+            var ret = await xservices.TempToPurchase();
+            return ret; 
+        }
+
         [HttpGet]
         public async Task<double> Total()
         {

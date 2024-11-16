@@ -138,6 +138,43 @@ namespace Pos.Services
             return 0;
         }
 
+        public async Task<int> TempToPurchase()
+        {
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+
+                    var com = new MySqlCommand("TempToPurchase", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+
+                    // Execute the command and fetch the result from the SELECT 1 query in the stored procedure
+                    var result = await com.ExecuteScalarAsync().ConfigureAwait(false);
+
+                    // If the result is not null and is a number (1), return it as success
+                    if (result != null && int.TryParse(result.ToString(), out int successCode))
+                    {
+                        return successCode;  // This will return 1 if the operation was successful
+                    }
+
+                    return 0; // If something goes wrong, return 0
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return 0; // In case of error, return 0
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+        }
+
+
         public async Task<double> Total()
         {
             using (var con = new MySqlConnection(_constring.GetConnection()))
