@@ -38,9 +38,9 @@ namespace Pos.Controllers
         }
 
         [HttpGet]
-        public async Task<List<products>> SProduct(string s)
+        public async Task<List<products>> SearchProduct(string s)
         {
-            var ret = await xservices.SProduct(s);
+            var ret = await xservices.SearchProduct(s);
             return ret;
         }
     }

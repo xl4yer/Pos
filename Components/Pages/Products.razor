@@ -8,6 +8,7 @@
 @inject IDialogService Dialog
 
 <PageTitle>Products</PageTitle>
+
 <style type="text/css">
     .centered {
         display: flex;
@@ -20,7 +21,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        /*   height: 80vh; */
+      
     }
 
     .img {
@@ -29,15 +30,16 @@
         border-radius: 50%;
     }
 
-    .mud-table-head .header-centered th {
+/*     .mud-table-head .header-centered th {
         text-align: center;
         font-size: 1.2em;
     }
 
     .mud-table-foot .bold-text .mud-table-cell {
         font-weight: 500;
-    }
+    } */
 </style>
+
 <div class="container mt-5">
     <div class="row">
         @if (p != null && p.Any())
@@ -83,14 +85,19 @@
             <!-- Right Column: Table Section -->
             <div class="col-sm-8">
                 <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true"
-                          FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "520px" : "")">
+                          FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">                    <ToolBarContent>
+                        <MudToolBar>
+                            <h5><u>Product List</u></h5> &nbsp;&nbsp;&nbsp;
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small"/>
+                        </MudToolBar>
+                    </ToolBarContent>
                     <HeaderContent>
                         <MudTh Style="height:50px;">Photo</MudTh>
                         <MudTh>Product Code</MudTh>
                         <MudTh>Product Name</MudTh>
                         <MudTh>Price</MudTh>
                         <MudTh>Status</MudTh>
-                        <MudTh></MudTh>
+                        <MudTh>Action</MudTh>
                     </HeaderContent>
 
                     <RowTemplate>
@@ -112,7 +119,6 @@
                         </MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Update" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" @onclick="(e => UpdateProduct(context.productID))" />
-                              <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -132,6 +138,7 @@
     </div>
 </div>
 
+
 @code {
     private products[]? p;
     [Parameter] public products _p { get; set; } = new products();
@@ -146,6 +153,8 @@
     [Parameter] public string imgsrc { get; set; } = "";
     [Parameter] public byte[] _filebytes { get; set; } = null;
     [Parameter] public byte[] _photo { get; set; } = null;
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+    public bool def { get; set; }
 
     public void OnValidSubmit(EditContext context)
     {
@@ -160,8 +169,6 @@
         }
     }
 
-    IList<IBrowserFile> files = new List<IBrowserFile>();
-    public bool def { get; set; }
     private async void UploadFiles(IBrowserFile file)
     {
         def = true;
@@ -181,6 +188,7 @@
         parameters.Add("p", update);
         var dialog = await Dialog.Show<UpdateProduct>("Update Product", parameters).Result;
     }
+
     private async Task clearImg()
     {
         var photos = GetImage(img64);
@@ -200,6 +208,12 @@
         return bytes;
 
     }
+
+    private async Task Refresh()
+    {
+        await LoadProduct();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -207,6 +221,7 @@
             await LoadProduct();
         }
     }
+
     private async Task LoadProduct()
     {
         try
@@ -307,34 +322,15 @@
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                    var response = await client.GetAsync($"api/Product/Product");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await Task.Delay(1000);
-                        var contentResponse = await response.Content.ReadAsStringAsync();
-                        p = JsonConvert.DeserializeObject<products[]>(contentResponse);
-                        StateHasChanged();
-                    }
-                    else
-                    {
-                        // Handle error
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle exception
-            }
+            StateHasChanged();
+            return;
         }
         using (HttpClient client = new HttpClient())
         {
             client.BaseAddress = new Uri($"{Nav.BaseUri}");
-            HttpResponseMessage response = await client.GetAsync($"api/Product/Search?search={txtsearch}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+            HttpResponseMessage response = await client.GetAsync($"api/Product/SearchProduct?s={txtsearch}");
             if (response.IsSuccessStatusCode)
             {
                 string contentrespose = await response.Content.ReadAsStringAsync();
@@ -343,9 +339,8 @@
             }
             else
             {
-                // Handle error
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
             }
         }
     }
-
 }

@@ -37,6 +37,20 @@ namespace Pos.Controllers
             return ret;
         }
 
+        [HttpDelete]
+        public async Task<int> DeleteTemp([FromBody] temp t)
+        {
+            var ret = await xservices.DeleteTemp(t);
+            return ret;
+        }
+
+        [HttpPost]
+        public async Task<int> TempToPurchase()
+        {
+            var ret = await xservices.TempToPurchase();
+            return ret; 
+        }
+
         [HttpGet]
         public async Task<double> Total()
         {

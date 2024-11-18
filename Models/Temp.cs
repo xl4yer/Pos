@@ -11,4 +11,9 @@
         public double total { get; set; }
         public double total_price { get; set; }
     }
+
+    public class quantity
+    {
+        public int qty { get; set; }
+    }
 }
