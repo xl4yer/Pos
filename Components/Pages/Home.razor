@@ -22,6 +22,9 @@
         background: #111;
         width: 100%;
         overflow: hidden;
+        background-image: url('image.jpg');
+        background-size:cover;
+        background-repeat:no-repeat;
     }
 
     .ring {
@@ -147,7 +150,7 @@
     <i style="--clr:#ff0057;"></i>
     <i style="--clr:#fffd44;"></i>
     <div class="login">
-        <h2>POS</h2>
+        <h4 style="color:white">DURIAN GARDEN (POS)</h4>
         <div class="inputBx">
             <input type="text" placeholder="Username" @bind-value="username">
         </div>
@@ -192,6 +195,8 @@
 
                     // Save token to local storage
                     await LocalStorage.SetItemAsStringAsync("token", u[0].token);
+                    await LocalStorage.SetItemAsStringAsync("role", u[0].role);
+                    await LocalStorage.SetItemAsStringAsync("name", u[0].name);
 
                     // Check the role and navigate accordingly
                     if (u[0].role.ToLower() == "cashier")

@@ -115,7 +115,7 @@ namespace Pos.Services
             return 0;
         }
 
-        public async Task<List<products>> SProduct(string search)
+        public async Task<List<products>> SearchProduct(string search)
         {
             List<products> p = new List<products>();
             using (var con = new MySqlConnection(_constring.GetConnection()))
@@ -137,10 +137,11 @@ namespace Pos.Services
                         {
                             productID = Convert.ToInt32(rdr["productID"]),
                             code = rdr["code"].ToString(),
+                            photo = (byte[])rdr["photo"],
                             name = rdr["name"].ToString(),
                             price = rdr["price"].ToString(),
-                            status = rdr["status"].ToString(),
-                          
+                            status = rdr["status"].ToString()
+
                         });
                     }
                     await rdr.CloseAsync().ConfigureAwait(false);

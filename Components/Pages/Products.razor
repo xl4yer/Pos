@@ -21,7 +21,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        /* height: 80vh; */
+      
     }
 
     .img {
@@ -30,14 +30,14 @@
         border-radius: 50%;
     }
 
-    .mud-table-head .header-centered th {
+/*     .mud-table-head .header-centered th {
         text-align: center;
         font-size: 1.2em;
     }
 
     .mud-table-foot .bold-text .mud-table-cell {
         font-weight: 500;
-    }
+    } */
 </style>
 
 <div class="container mt-5">
@@ -85,14 +85,19 @@
             <!-- Right Column: Table Section -->
             <div class="col-sm-8">
                 <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true"
-                          FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "520px" : "")">
+                          FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">                    <ToolBarContent>
+                        <MudToolBar>
+                            <h5><u>Product List</u></h5> &nbsp;&nbsp;&nbsp;
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small"/>
+                        </MudToolBar>
+                    </ToolBarContent>
                     <HeaderContent>
                         <MudTh Style="height:50px;">Photo</MudTh>
                         <MudTh>Product Code</MudTh>
                         <MudTh>Product Name</MudTh>
                         <MudTh>Price</MudTh>
                         <MudTh>Status</MudTh>
-                        <MudTh>Actions</MudTh>
+                        <MudTh>Action</MudTh>
                     </HeaderContent>
 
                     <RowTemplate>
@@ -204,6 +209,11 @@
 
     }
 
+    private async Task Refresh()
+    {
+        await LoadProduct();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -312,34 +322,15 @@
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                    var response = await client.GetAsync($"api/Product/Product");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await Task.Delay(1000);
-                        var contentResponse = await response.Content.ReadAsStringAsync();
-                        p = JsonConvert.DeserializeObject<products[]>(contentResponse);
-                        StateHasChanged();
-                    }
-                    else
-                    {
-                        // Handle error
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle exception
-            }
+            StateHasChanged();
+            return;
         }
         using (HttpClient client = new HttpClient())
         {
             client.BaseAddress = new Uri($"{Nav.BaseUri}");
-            HttpResponseMessage response = await client.GetAsync($"api/Product/Search?search={txtsearch}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+            HttpResponseMessage response = await client.GetAsync($"api/Product/SearchProduct?s={txtsearch}");
             if (response.IsSuccessStatusCode)
             {
                 string contentrespose = await response.Content.ReadAsStringAsync();
@@ -348,9 +339,8 @@
             }
             else
             {
-                // Handle error
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
             }
         }
     }
-
 }
