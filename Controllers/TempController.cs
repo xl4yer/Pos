@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Pos.Models;
 using Pos.Services;
 
@@ -10,10 +11,13 @@ namespace Pos.Controllers
     {
 
         TempServices xservices;
+        IHubContext<Hub> _hub;
 
-        public TempController(TempServices xservices)
+
+        public TempController(TempServices xservices, IHubContext<Hub> hubContext)
         {
             this.xservices = xservices;
+            _hub = hubContext;
         }
 
         [HttpGet]

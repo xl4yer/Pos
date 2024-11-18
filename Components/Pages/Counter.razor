@@ -9,6 +9,7 @@
 @inject IJSRuntime JS
 @inject ISnackbar SnackBar
 @inject IDialogService Dialog
+@using Microsoft.AspNetCore.SignalR.Client
 
 <PageTitle>Counter</PageTitle>
 
@@ -221,18 +222,33 @@
 </style>
 
 
-<MudToolBar Style="border-bottom:solid gray 0.5px;">
-    <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="mr-5" />
-    <MudText Align="Align.Left"><b>DURIAN GARDEN (POS)</b></MudText>
+<MudToolBar Style="border-bottom:solid gray 0.1px;">
+    <MudIconButton Icon="@Icons.Material.Outlined.Menu"
+                   Color="Color.Inherit"
+                   Class="mr-5" />
+    <MudText Align="Align.Left">
+        <b>DURIAN GARDEN (POS)</b>
+    </MudText>&nbsp;&nbsp;
+    <MudTextField T="string"
+                  Clearable
+                  @bind-Value="txtsearch"
+                  TextChanged="Search"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  AdornmentColor="Color.Tertiary"
+                  Placeholder="What are you looking for?"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+    <MudSpacer />
+    <MudSpacer />
     <MudSpacer />
     <div class="navigation">
         <a class="button" href="">
-            <img src="cashier.png">
+            <img src="cashier.png" />
             <div class="logout" style="color:black">LOGOUT</div>
         </a>
     </div>
 </MudToolBar>
-
 
 @if (p == null || p.Length == 0)
 {
@@ -251,44 +267,42 @@ else
                     {
                         <div class="col">
                             <div class="card h-100">
-                                <!-- Product Image -->
-                                <img src="data:image/bmp;base64, @(Convert.ToBase64String(product.photo))" class="card-img-top" alt="@product.name">
-
+                                <img src="data:image/bmp;base64, @(Convert.ToBase64String(product.photo))"
+                                class="card-img-top"
+                                alt="@product.name" />
                                 <div class="card-body">
-                                    <!-- Product Name -->
                                     <h4 class="card-title">@product.name</h4>
-
-                                    <!-- Product Code -->
                                     <h5 class="card-subtitle">@product.code</h5>
-
-                                    <!-- Product Price -->
                                     <p class="price">₱@product.price</p>
-
-                                    <!-- Product Status -->
                                     @if (product.status == "Available")
                                     {
-                                        <span class="chip" style="background-color: #2ecc71; color: white;">@product.status</span>
+                                        <span class="chip"
+                                        style="background-color: #2ecc71; color: white;">
+                                            @product.status
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="chip" style="background-color: #e74c3c; color: white;">@product.status</span>
+                                        <span class="chip"
+                                        style="background-color: #e74c3c; color: white;">
+                                            @product.status
+                                        </span>
                                     }
-                                    @if (product.status == "Available"){
+                                    @if (product.status == "Available")
+                                    {
                                         <MudNumericField T="int"
-                                                         Variant="Variant.Outlined"
-                                                         Margin="Margin.Dense"
-                                                         @bind-Value="product.qty" />
+                                        Variant="Variant.Outlined"
+                                        Margin="Margin.Dense"
+                                        @bind-Value="product.qty" />
                                     }
-                                    else{
+                                    else
+                                    {
                                         <MudNumericField T="int"
-                                                         Variant="Variant.Outlined"
-                                                         Margin="Margin.Dense"
-                                                         Disabled
-                                                         @bind-Value="product.qty" />
+                                        Variant="Variant.Outlined"
+                                        Margin="Margin.Dense"
+                                        Disabled
+                                        @bind-Value="product.qty" />
                                     }
-                                    <!-- Add to Cart Button -->
-                                   
-
                                     @if (product.status == "Available")
                                     {
                                         <MudFab StartIcon="@Icons.Material.Filled.AddShoppingCart"
@@ -307,19 +321,18 @@ else
                                         Color="Color.Primary"
                                         style="font-size: 12px; margin-top: 10px;" />
                                     }
-
                                 </div>
                             </div>
-
                         </div>
-
                     }
                 </div>
-
                 @if (currentIndex < p.Length)
                 {
                     <div class="text-center mt-3">
-                        <MudButton Disabled="@_loading" OnClick="@loadMore" Variant="Variant.Filled" Color="Color.Secondary">
+                        <MudButton Disabled="@_loading"
+                        OnClick="@loadMore"
+                        Variant="Variant.Filled"
+                        Color="Color.Secondary">
                             @if (_loading)
                             {
                                 <div class="loader"></div>
@@ -336,27 +349,29 @@ else
             <!-- Right Column (Cart and Summary) -->
             <div class="col-md-6 mt-5">
                 <div class="container">
-                    <MudCard Elevation="0" Style="padding: 15px; font-family: monospace;">
-                        <!-- Input Toolbar -->
+                    <MudCard Elevation="0"
+                    Style="padding: 15px; font-family: monospace;">
                         <MudToolBar>
                             <MudTextField @bind-Value="_temp.code"
-                                          Style="font-family:monospace; font-size: 16px;"
-                                          Placeholder="Input product code here..."
-                                          Margin="Margin.Dense"
-                                          Variant="Variant.Outlined"
-                                          @onkeypress="HandleKeyPress"
-                                          AutoFocus
-                                          @ref="inputElement">
-                            </MudTextField>
+                            Style="font-family:monospace; font-size: 16px;"
+                            Placeholder="Input product code here"
+                            Margin="Margin.Dense"
+                            Variant="Variant.Outlined"
+                            @onkeypress="HandleKeyPress"
+                            AutoFocus
+                            @ref="inputElement" />
                         </MudToolBar>
-
-                        <!-- Table displaying transaction items -->
                         @if (t != null && t.Any())
                         {
-                            <MudTable Class="ma-5" Dense="true" Elevation="0"
-                                      Hover="true" Items="@t" HorizontalScrollbar="true"
-                                      FixedHeader="@fixed_header" FixedFooter="@fixed_footer"
-                                      Height="@(fixed_header || fixed_footer ? "460px" : "")">
+                            <MudTable Class="ma-5"
+                            Dense="true"
+                            Elevation="0"
+                            Hover="true"
+                            Items="@t"
+                            HorizontalScrollbar="true"
+                            FixedHeader="@fixed_header"
+                            FixedFooter="@fixed_footer"
+                            Height="@(fixed_header || fixed_footer ? "460px" : "")">
                                 <HeaderContent>
                                     <MudTh>Product</MudTh>
                                     <MudTh>Price</MudTh>
@@ -365,48 +380,57 @@ else
                                     <MudTh></MudTh>
                                 </HeaderContent>
                                 <RowTemplate>
-                                    <MudTd DataLabel="Product Name" Style="font-size: 14px;">@context.name</MudTd>
-                                    <MudTd DataLabel="Price" Style="font-size: 14px;">₱@context.price</MudTd>
+                                    <MudTd DataLabel="Product Name"
+                                    Style="font-size: 14px;">
+                                        @context.name
+                                    </MudTd>
+                                    <MudTd DataLabel="Price"
+                                    Style="font-size: 14px;">
+                                        ₱@context.price
+                                    </MudTd>
                                     <MudTd>
                                         <MudNumericField T="int"
-                                                         Variant="Variant.Outlined"
-                                                         Margin="Margin.Dense"
-                                                         Style="width: 60px; height: 22px; font-size: 14px;"
-                                                         Value="@context.quantity"
-                                                         ValueChanged="@((_value) => UpdateQuantity(context.tempID, _value))"
-                                                         Immediate="true" />
+                                        Variant="Variant.Outlined"
+                                        Margin="Margin.Dense"
+                                        Style="width: 60px; height: 22px; font-size: 14px;"
+                                        Value="@context.quantity"
+                                        ValueChanged="@((_value) => UpdateQuantity(context.tempID, _value))"
+                                        Immediate="true" />
                                     </MudTd>
-                                    <MudTd DataLabel="Subtotal" Style="font-size: 14px;">₱@context.total</MudTd>
+                                    <MudTd DataLabel="Subtotal"
+                                    Style="font-size: 14px;">
+                                        ₱@context.total
+                                    </MudTd>
                                     <MudTd>
                                         <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                       Variant="Variant.Filled"
-                                                       Color="Color.Error"
-                                                       Size="Size.Small"
-                                                       Style="width:20px; height:20px;"
-                                                       @onclick="(e => DeleteTemp(context.tempID))" />
+                                        Variant="Variant.Filled"
+                                        Color="Color.Error"
+                                        Size="Size.Small"
+                                        Style="width:20px; height:20px;"
+                                        @onclick="(e => DeleteTemp(context.tempID))" />
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>
                         }
                         else
                         {
-                            <MudText Align="Align.Center" Style="font-family:monospace; font-size: 25px;">
+                            <MudText Align="Align.Center"
+                            Style="font-family:monospace; font-size: 25px;">
                                 No Transactions Found
-                                </MudText>
+                            </MudText>
                         }
-
-                        <!-- Total Price -->
                         <MudToolBar>
                             <MudSpacer />
-                            <MudText Typo="Typo.h6" Align="Align.Right" Style="font-size: 20px; font-family: monospace;">
+                            <MudText Typo="Typo.h5"
+                            Align="Align.Right"
+                            Style="font-size: 20px; font-family: monospace;">
                                 Total: <u>₱@_total</u>
                             </MudText>
                         </MudToolBar>
                     </MudCard>
-
                 </div>
 
-                <!-- Print Status -->
+                <!-- JsPrintManager Print Status -->
                 <div>
                     @if (JSPrintManager.Status == JSPMWSStatus.Open)
                     {
@@ -440,7 +464,6 @@ else
     </div>
 }
 
-
 @code {
     bool fixed_header = true;
     bool fixed_footer = false;
@@ -457,12 +480,23 @@ else
     public double _total { get; set; } = 0;
     private int _value { get; set; }
 
-    private int _qty { get; set; }
-
-    public class Quantities
+    protected HubConnection hubConnection;
+    protected async override Task OnInitializedAsync()
     {
-        public int _qty { get; set; }
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/hub"))
+            .Build();
+
+        hubConnection.On("client", async () =>
+        {
+            await Total();
+            await LoadTemp();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
     }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -477,6 +511,11 @@ else
 
     public async Task Total()
     {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("SendClient");
+        }
+
         using (HttpClient client = new HttpClient())
         {
             client.BaseAddress = new Uri($"{Nav.BaseUri}");
@@ -625,9 +664,9 @@ else
 
                     if (i > 0)
                     {
-                        StateHasChanged();
                         await LoadTemp();
                         await Total();
+                        StateHasChanged();
                     }
                 }
                 else
@@ -646,7 +685,7 @@ else
 
     private async Task DeleteTemp(int tempID)
     {
-        //
+    //
     }
 
 
@@ -700,38 +739,21 @@ else
         currentIndex = Math.Min(currentIndex + PageSize, p.Length);
         StateHasChanged();
     }
+
     public async Task Search()
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                    var response = await client.GetAsync($"api/Product/Products");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await Task.Delay(1000);
-                        var contentResponse = await response.Content.ReadAsStringAsync();
-                        p = JsonConvert.DeserializeObject<products[]>(contentResponse);
-                        StateHasChanged();
-                    }
-                    else
-                    {
-                        // Handle error
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle exception
-            }
+            await LoadProduct();
+            StateHasChanged();
+            return;
         }
         using (HttpClient client = new HttpClient())
         {
             client.BaseAddress = new Uri($"{Nav.BaseUri}");
-            HttpResponseMessage response = await client.GetAsync($"api/Product/Search?search={txtsearch}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+            HttpResponseMessage response = await client.GetAsync($"api/Product/SearchProduct?s={txtsearch}");
             if (response.IsSuccessStatusCode)
             {
                 string contentrespose = await response.Content.ReadAsStringAsync();
@@ -740,13 +762,17 @@ else
             }
             else
             {
-                // Handle error
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
             }
         }
     }
 
     private async Task LoadTemp()
     {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("SendClient");
+        }
         try
         {
             using (var client = new HttpClient())

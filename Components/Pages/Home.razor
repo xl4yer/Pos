@@ -192,13 +192,10 @@
                             username = code[0].username,
                             role = code[0].role
                         });
-
-                    // Save token to local storage
                     await LocalStorage.SetItemAsStringAsync("token", u[0].token);
                     await LocalStorage.SetItemAsStringAsync("role", u[0].role);
                     await LocalStorage.SetItemAsStringAsync("name", u[0].name);
 
-                    // Check the role and navigate accordingly
                     if (u[0].role.ToLower() == "cashier")
                     {
                         Nav.NavigateTo("/counter");
@@ -209,18 +206,17 @@
                     }
                     else
                     {
-                        // Handle unexpected roles if needed, or log out the user
-                        // Optionally, you can show an error or notification for unsupported roles
+                       //
                     }
                 }
                 else
                 {
-                    // Handle case where no user is found, e.g., show an error message
+                   //
                 }
             }
             else
             {
-                // Handle failed API call, possibly show an error message to the user
+               //
             }
         }
     }

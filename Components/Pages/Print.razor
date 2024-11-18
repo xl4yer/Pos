@@ -7,9 +7,11 @@
 @inject ISnackbar SnackBar
 @using System.Net.Http.Headers
 
-<MudDialog TitleClass="mud-primary" DisableSidePadding="true">
+<MudDialog TitleClass="mud-primary"
+           DisableSidePadding="true">
     <TitleContent>
-        <MudText Typo="Typo.h6" Style="color:white; font-weight: bold;">
+        <MudText Typo="Typo.h6"
+                 Style="color:white; font-weight: bold;">
             Billing
         </MudText>
     </TitleContent>
@@ -17,37 +19,49 @@
         <MudContainer Style="max-height: 500px; padding: 10px;">
             <div style="text-align: center; font-family: monospace; font-size: 20px; line-height: 1.6;">
                 <div style="padding-bottom: 10px;">
-                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">Total Bill</h5>
-                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;"><u>@_total</u></h5>
+                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">
+                        Total Bill
+                    </h5>
+                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;">
+                        <u>@_total</u>
+                    </h5>
                 </div>
-
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Amount</span> &nbsp;&nbsp;
+                    <span>Amount</span>&nbsp;&nbsp;
                     <MudNumericField T="double"
-                    Variant="Variant.Outlined"
-                    Margin="Margin.Dense"
-                    Value="_amount"
-                    ValueChanged="OnAmountChanged"
-                    Immediate="true"
-                    Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Value="_amount"
+                                     ValueChanged="OnAmountChanged"
+                                     Immediate="true"
+                                     Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
                 </div>
-
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <span>Change</span>
-                    <span style="font-weight: bold;"><u>@_change</u></span>
+                    <span style="font-weight: bold;">
+                        <u>@_change</u>
+                    </span>
                 </div>
-
                 <div style="margin-top: 20px;padding-top: 10px;">
                     <div style="display: flex; justify-content: space-between;">
-                        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary" Style="font-family: monospace; font-size: 14px;">Cancel</MudButton>
-                        <MudButton @onclick="Submit" Variant="Variant.Filled" Color="Color.Primary" Style="font-family: monospace; font-size: 14px;">Submit</MudButton>
+                        <MudButton OnClick="Cancel"
+                                   Variant="Variant.Text"
+                                   Color="Color.Secondary"
+                                   Style="font-family: monospace; font-size: 14px;">
+                            Cancel
+                        </MudButton>
+                        <MudButton @onclick="Submit"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Style="font-family: monospace; font-size: 14px;">
+                            Submit/Enter
+                        </MudButton>
                     </div>
                 </div>
             </div>
         </MudContainer>
     </DialogContent>
 </MudDialog>
-
 
 
 @code {
