@@ -243,7 +243,7 @@
     <MudSpacer />
     <MudSpacer />
     <div class="navigation">
-        <a class="button" href="">
+        <a class="button" href="" @onclick="Logout">
             <img src="cashier.png" />
             <div class="logout" style="color:black">LOGOUT</div>
         </a>
@@ -498,13 +498,14 @@ else
     }
 
 
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await LoadTemp();
             await LoadProduct();
-            await RegisterKeyDown();
+            await ctrlP();
             await Total();
         }
     }
@@ -588,6 +589,10 @@ else
         {
             // Handle exception
         }
+    }
+
+    private async Task Logout(){
+        Nav.NavigateTo("/");
     }
 
     private async Task AddToCart(string code, int qty)
@@ -744,8 +749,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            await LoadProduct();
-            StateHasChanged();
+            LoadProduct();
             return;
         }
         using (HttpClient client = new HttpClient())
@@ -800,7 +804,7 @@ else
 
     //Print Receipt
     // JavaScript function to call DoSomething when Shift + P is pressed
-    private async Task RegisterKeyDown()
+    private async Task ctrlP()
     {
         await JS.InvokeVoidAsync("ctrlP", DotNetObjectReference.Create(this));
     }

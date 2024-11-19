@@ -369,8 +369,7 @@
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            await LoadProduct();
-            StateHasChanged();
+            LoadProduct();
             return;
         }
         using (HttpClient client = new HttpClient())
