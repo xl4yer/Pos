@@ -1,11 +1,13 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 using MudBlazor;
 using MudBlazor.Services;
 using Neodynamic.Blazor;
 using Pos.Class;
 using Pos.Components;
+using Pos.Hubs;
 using Pos.Services;
 using System.Text;
 
@@ -27,6 +29,14 @@ builder.Services.AddJSPrintManager();
 builder.Services.AddAuthorization();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddMudServices();
+builder.Services.AddSignalR();
+
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/octet-stream" });
+});
+
 builder.Services.AddCors(options =>
 {
 
@@ -78,6 +88,7 @@ app.UseCors("NewPolicy");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<Hubs>("/hub");
 app.MapControllers();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()

@@ -6,6 +6,7 @@
 @using System.Net.Http.Headers
 @inject ISnackbar SnackBar
 @inject IDialogService Dialog
+@using Microsoft.AspNetCore.SignalR.Client
 
 <PageTitle>Products</PageTitle>
 
@@ -21,7 +22,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
-      
     }
 
     .img {
@@ -30,14 +30,14 @@
         border-radius: 50%;
     }
 
-/*     .mud-table-head .header-centered th {
-        text-align: center;
-        font-size: 1.2em;
-    }
+    /*     .mud-table-head .header-centered th {
+            text-align: center;
+            font-size: 1.2em;
+        }
 
-    .mud-table-foot .bold-text .mud-table-cell {
-        font-weight: 500;
-    } */
+        .mud-table-foot .bold-text .mud-table-cell {
+            font-weight: 500;
+        } */
 </style>
 
 <div class="container mt-5">
@@ -50,45 +50,71 @@
                     <DataAnnotationsValidator />
                     <MudContainer Style="max-height: 600px;">
                         <div class="photo">
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
+                            <MudFileUpload T="IBrowserFile"
+                                           FilesChanged="UploadFiles"
+                                           Accept=".png,.jpg,.jpeg">
                                 <ActivatorContent>
-                                    <img src="@imgsrc" width="250" height="250" style="border:1px solid gray; margin-top:10px; border-radius:5px;" />
+                                    <img src="@imgsrc"
+                                         width="250"
+                                         height="250"
+                                         style="border:1px solid gray; 
+                                                margin-top:10px; 
+                                                border-radius:5px;" />
                                 </ActivatorContent>
                             </MudFileUpload>
-                        </div>
-                        <br />
+                        </div><br />
                         <div>
                             <p>Product Code</p>
-                            <MudTextField @bind-Value="@_p.code" Clearable For="@(() => _p.code)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div>
-                        <br />
+                            <MudTextField @bind-Value="@_p.code"
+                                          Clearable
+                                          For="@(() => _p.code)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </div><br />
                         <div>
                             <p>Product Name</p>
-                            <MudTextField @bind-Value="@_p.name" Clearable For="@(() => _p.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div>
-                        <br />
+                            <MudTextField @bind-Value="@_p.name"
+                                          Clearable
+                                          For="@(() => _p.name)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </div><br />
                         <div>
                             <p>Product Price</p>
-                            <MudTextField @bind-Value="@_p.price" Clearable For="@(() => _p.price)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <MudTextField @bind-Value="@_p.price"
+                                          Clearable
+                                          For="@(() => _p.price)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
                         </div>
                     </MudContainer>
                     <MudToolBar>
                         <MudSpacer />
                         <MudButton>Clear</MudButton>
-                        <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">
-                            Add Product
-                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   @onclick="Submit"
+                                   Color="Color.Primary">Add Product</MudButton>
                     </MudToolBar>
                 </EditForm>
             </div>
-
             <!-- Right Column: Table Section -->
             <div class="col-sm-8">
-                <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true"
-                          FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">                    <ToolBarContent>
+                <MudTable Class="ma-5"
+                          Dense="true"
+                          Hover="true"
+                          Items="@p"
+                          HorizontalScrollbar="true"
+                          FixedHeader="@fixed_header"
+                          FixedFooter="@fixed_footer"
+                          Height="@(fixed_header || fixed_footer ? "455px" : "")">
+                    <ToolBarContent>
                         <MudToolBar>
                             <h5><u>Product List</u></h5> &nbsp;&nbsp;&nbsp;
-                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           @onclick="Refresh"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Tertiary"
+                                           Size="Size.Small" />
                         </MudToolBar>
                     </ToolBarContent>
                     <HeaderContent>
@@ -99,33 +125,55 @@
                         <MudTh>Status</MudTh>
                         <MudTh>Action</MudTh>
                     </HeaderContent>
-
                     <RowTemplate>
-                        <MudTd id="rows" DataLabel="Photo">
-                            <img src="data:image/bmp;base64, @(Convert.ToBase64String(@context.photo))" class="img" />
+                        <MudTd DataLabel="Photo">
+                            <img src="data:image/bmp;base64, @(Convert.ToBase64String(@context.photo))"
+                                 class="img" />
                         </MudTd>
-                        <MudTd DataLabel="Code">@context.code</MudTd>
-                        <MudTd DataLabel="Name">@context.name</MudTd>
-                        <MudTd DataLabel="Price">@context.price</MudTd>
+                        <MudTd DataLabel="Code">
+                            @context.code
+                        </MudTd>
+                        <MudTd DataLabel="Name">
+                            @context.name
+                        </MudTd>
+                        <MudTd DataLabel="Price">
+                            @context.price
+                        </MudTd>
                         <MudTd DataLabel="Status">
                             @if (context.status == "Available")
                             {
-                                <MudChip T="string" Color="Color.Info">@context.status</MudChip>
+                                <MudChip T="string"
+                                         Color="Color.Info">
+                                    @context.status
+                                </MudChip>
                             }
                             else
                             {
-                                <MudChip T="string" Color="Color.Error">@context.status</MudChip>
+                                <MudChip T="string"
+                                         Color="Color.Error">
+                                    @context.status
+                                </MudChip>
                             }
                         </MudTd>
                         <MudTd>
-                            <MudIconButton Icon="@Icons.Material.Filled.Update" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" @onclick="(e => UpdateProduct(context.productID))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Update"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Warning"
+                                           Size="Size.Small"
+                                           @onclick="(e => UpdateProduct(context.productID))" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
                 <MudToolBar Justify="Justify.End">
-                    <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.End"
-                                  AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary"
-                                  Label="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudTextField @bind-Value="txtsearch"
+                                  Clearable
+                                  TextChanged="Search"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  AdornmentColor="Color.Tertiary"
+                                  Label="What are you looking for?"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
                 </MudToolBar>
             </div>
         }
@@ -137,7 +185,6 @@
         }
     </div>
 </div>
-
 
 @code {
     private products[]? p;
@@ -322,7 +369,7 @@
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            StateHasChanged();
+            LoadProduct();
             return;
         }
         using (HttpClient client = new HttpClient())
