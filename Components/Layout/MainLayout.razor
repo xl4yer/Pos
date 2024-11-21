@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
 
 <MudThemeProvider @rendermode="RenderMode.InteractiveServer" />
 <MudPopoverProvider @rendermode="RenderMode.InteractiveServer" />
@@ -10,11 +11,10 @@
 <MudSnackbarProvider @rendermode="RenderMode.InteractiveServer" />
 
 <style>
-    body
-    {
+    body {
         font-family: monospace;
     }
-    /*Logout icon*/
+
     .img2 {
         width: 35px;
         border-radius: 50px;
@@ -59,7 +59,6 @@
         text-decoration: none;
     }
 
-    /* Responsive Styles */
     @@media (max-width: 600px) {
         .img2 {
             width: 25px;
@@ -89,15 +88,12 @@
     </div>
 
     <main>
-       @*  <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div> *@
         <MudToolBar Style="border-bottom:solid gray 0.5px;" class="top-row px-4">
             <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="mr-5" />
             <MudText Align="Align.Left"><b>DURIAN GARDEN (POS)</b></MudText>
             <MudSpacer />
             <div class="navigation">
-                <a class="button" href="">
+                <a class="button" @onclick="Logout">
                     <img class="img2" src="cashier.png">
                     <div class="logout" style="color:black">LOGOUT</div>
                 </a>
@@ -114,3 +110,10 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        Nav.NavigateTo("/");
+    }
+}
