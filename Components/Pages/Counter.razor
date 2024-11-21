@@ -391,9 +391,9 @@ else
 
         hubConnection.On("client", async () =>
         {
-             await Total();
-             await LoadTemp();
-             StateHasChanged();
+            await Total();
+            await LoadTemp();
+            StateHasChanged();
         });
 
         await hubConnection.StartAsync();
@@ -409,13 +409,12 @@ else
         }
     }
 
-    public async Task Total()
+    private async Task Total()
     {
         if (hubConnection is not null)
         {
             await hubConnection.SendAsync("SendClient");
         }
-
         using (HttpClient client = new HttpClient())
         {
             client.BaseAddress = new Uri($"{Nav.BaseUri}");
@@ -425,6 +424,10 @@ else
                 string contentResponse = await response.Content.ReadAsStringAsync();
                 _total = JsonConvert.DeserializeObject<double>(contentResponse);
                 StateHasChanged();
+            }
+            else
+            {
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
             }
         }
     }
@@ -438,6 +441,7 @@ else
             await AddToCartBarCode();
         }
     }
+
     private async Task AddToCartBarCode()
     {
         try
@@ -486,8 +490,13 @@ else
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
+    }
+
+    private async Task Clear()
+    {
+        _temp.code = null;
     }
 
     private async Task Logout()
@@ -530,14 +539,13 @@ else
                 }
                 else
                 {
-                    StateHasChanged();
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -547,8 +555,8 @@ else
         {
             var _t = new temp
                 {
-                    tempID = tempID, 
-                    quantity = quantity 
+                    tempID = tempID,
+                    quantity = quantity
                 };
 
             using (HttpClient client2 = new HttpClient())
@@ -575,7 +583,6 @@ else
                 }
                 else
                 {
-                    StateHasChanged();
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
@@ -588,12 +595,52 @@ else
 
     private async Task DeleteTemp(int tempID)
     {
-   
-    }
+        try
+        {
+            var _t = new temp
+                {
+                    tempID = tempID,
+                };
 
-    private async Task Clear()
-    {
-        _temp.code = null;
+            using (HttpClient client2 = new HttpClient())
+            {
+                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var jsonBody = JsonConvert.SerializeObject(_t);
+                HttpContent requestBody = new StringContent(jsonBody);
+                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                                                            await Loc.GetItemAsStringAsync("token"));
+                var request = new HttpRequestMessage(HttpMethod.Delete, "api/Temp/DeleteTemp")
+                    {
+                        Content = requestBody
+                    };
+
+                HttpResponseMessage response = await client2.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int deletedRows = JsonConvert.DeserializeObject<int>(responseContent);
+
+                    if (deletedRows > 0)
+                    {
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        SnackBar.Add("No item found to delete", Severity.Warning);
+                    }
+                }
+                else
+                {
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task LoadProduct()
@@ -613,13 +660,13 @@ else
                 }
                 else
                 {
-                    // Handle error
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -641,7 +688,7 @@ else
         StateHasChanged();
     }
 
-    public async Task Search()
+    private async Task Search()
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
@@ -688,17 +735,17 @@ else
                 }
                 else
                 {
-                    // Handle error
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
 
-    public async Task Print()
+    private async Task Print()
     {
         var parameters = new DialogParameters();
         var dialog = await Dialog.Show<Print>("Total Bill", parameters).Result;

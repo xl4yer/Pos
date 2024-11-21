@@ -124,19 +124,20 @@ namespace Pos.Services
                         CommandType = CommandType.StoredProcedure,
                     };
                     com.Parameters.AddWithValue("_tempID", t.tempID);
-                    return await com.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    var result = await com.ExecuteScalarAsync().ConfigureAwait(false);
+                    return Convert.ToInt32(result);
                 }
                 catch (Exception ex)
                 {
-                    // Handle the exception here
+                    throw new Exception("Error executing DeleteTemp", ex);
                 }
                 finally
                 {
                     await con.CloseAsync().ConfigureAwait(false);
                 }
             }
-            return 0;
         }
+
 
         public async Task<int> TempToPurchase()
         {

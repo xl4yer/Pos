@@ -29,15 +29,6 @@
         height: 45px;
         border-radius: 50%;
     }
-
-    /*     .mud-table-head .header-centered th {
-            text-align: center;
-            font-size: 1.2em;
-        }
-
-        .mud-table-foot .bold-text .mud-table-cell {
-            font-weight: 500;
-        } */
 </style>
 
 <div class="container mt-5">
@@ -216,13 +207,13 @@
                 }
                 else
                 {
-                    // Handle error
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -276,14 +267,13 @@
                         await InvokeAsync(() =>
                         {
                             SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                            StateHasChanged();
                         });
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Handle exception (if needed)
+                SnackBar.Add($"Error: {ex.Message}", Severity.Error);
             }
         }
     }
@@ -295,7 +285,8 @@
         currentIndex = Math.Min(currentIndex + PageSize, p.Length);
         StateHasChanged();
     }
-    public async Task Search()
+
+    private async Task Search()
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {

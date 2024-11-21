@@ -40,11 +40,26 @@ namespace Pos.Controllers
         }
 
         [HttpDelete]
-        public async Task<int> DeleteTemp([FromBody] temp t)
+        public async Task<IActionResult> DeleteTemp([FromBody] temp t)
         {
-            var ret = await xservices.DeleteTemp(t);
-            return ret;
+            try
+            {
+                var ret = await xservices.DeleteTemp(t);
+                if (ret > 0)
+                {
+                    return Ok(ret);
+                }
+                else
+                {
+                    return NotFound("Item not found or already deleted.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
+
 
         [HttpPost]
         public async Task<int> TempToPurchase()

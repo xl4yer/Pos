@@ -95,7 +95,7 @@
         StateHasChanged();
     }
 
-    async Task clearImg()
+   private async Task clearImg()
     {
         var photos = GetImage(img64);
 
@@ -175,14 +175,13 @@
                         await InvokeAsync(() =>
                         {
                             SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                            StateHasChanged();
                         });
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Handle exception (if needed)
+                SnackBar.Add($"Error: {ex.Message}", Severity.Error);
             }
         }
     }

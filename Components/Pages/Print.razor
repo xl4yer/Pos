@@ -82,7 +82,7 @@
         }
     }
 
-    public async Task Total()
+    private async Task Total()
     {
         using (HttpClient client = new HttpClient())
         {
@@ -93,6 +93,10 @@
                 string contentResponse = await response.Content.ReadAsStringAsync();
                 _total = JsonConvert.DeserializeObject<double>(contentResponse);
                 StateHasChanged();
+            }
+            else
+            {
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
             }
         }
     }
@@ -113,20 +117,19 @@
                     int i = JsonConvert.DeserializeObject<int>(responseContent);
                     if (i > 0)
                     {
-                        MudDialog.Close();
                         StateHasChanged();
+                        MudDialog.Close();
                     }
                 }
                 else
                 {
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                    StateHasChanged();
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -160,13 +163,13 @@
                 }
                 else
                 {
-                    // Handle error
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle exception
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
 
@@ -174,28 +177,19 @@
     private bool UseDefaultPrinter = true;
     private string AbbreviateName(string name)
     {
-        // Limit the name to a maximum of 12 characters
         if (name.Length > 12)
         {
-            // Split the name into words
             var words = name.Split(' ');
-
             if (words.Length > 1)
             {
-                // Keep the first word fully
                 string abbreviatedName = words[0];
-
-                // Shorten the second word to only a few consonants
                 var secondWord = words[1];
-                string shortenedSecondWord = new string(secondWord.Where(c => "aeiouAEIOU".IndexOf(c) == -1).Take(4).ToArray());  // Keep only consonants and limit to 4 characters
-
+                string shortenedSecondWord = new string(secondWord.Where(c => "aeiouAEIOU".IndexOf(c) == -1).Take(4).ToArray());
                 abbreviatedName += " " + shortenedSecondWord;
-
                 return abbreviatedName.Length > 12 ? abbreviatedName.Substring(0, 12) : abbreviatedName;
             }
             else
             {
-                // If there's only one word, return the first 12 characters
                 return name.Substring(0, 12);
             }
         }
@@ -238,8 +232,6 @@
             JSPrintManager.SendClientPrintJob(cpj);
         }
     }
-
-
 
     protected override void OnAfterRender(bool firstRender)
     {
