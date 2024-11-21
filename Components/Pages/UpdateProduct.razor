@@ -6,59 +6,31 @@
 @inject ISnackbar SnackBar
 @inject IDialogService Dialog
 
-<EditForm Model="@p"
-          OnValidSubmit="OnValidSubmit">
+<EditForm Model="@p" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator />
-    <MudDialog TitleClass="mud-primary"
-               DisableSidePadding="true">
+    <MudDialog TitleClass="mud-primary" DisableSidePadding="true">
         <TitleContent>
-            <MudText Typo="Typo.h6"
-                     Style="color:white">
+            <MudText Typo="Typo.h6" Style="color:white">
                 Update Product
             </MudText>
         </TitleContent>
         <DialogContent>
             <MudContainer Style="max-height: 500px; overflow-y: scroll">
                 <div class="photo">
-                    <MudFileUpload T="IBrowserFile"
-                                   FilesChanged="UploadFiles"
-                                   Accept=".png,.jpg,.jpeg">
+                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
                         <ActivatorContent>
-                            <img src="@imgsrc"
-                                 width="250"
-                                 height="250"
-                                 style="border:1px solid gray; margin-top:10px; border-radius:5px;" />
+                            <img src="@imgsrc" width="250" height="250" style="border:1px solid gray; margin-top:10px; border-radius:5px;" />
                         </ActivatorContent>
                     </MudFileUpload>
                 </div><br />
                 <p1>Product Code</p1>
-                <MudTextField Clearable
-                              @bind-Value="p.code"
-                              For="@(() => p.code)"
-                              T="string"
-                              AutoFocus
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
+                <MudTextField Clearable @bind-Value="p.code" For="@(() => p.code)" T="string" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Product Name</p1>
-                <MudTextField Clearable
-                              @bind-Value="p.name"
-                              For="@(() => p.name)"
-                              T="string"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
+                <MudTextField Clearable @bind-Value="p.name" For="@(() => p.name)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Product Price</p1>
-                <MudTextField Clearable
-                              @bind-Value="p.price"
-                              For="@(() => p.price)"
-                              T="string"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
+                <MudTextField Clearable @bind-Value="p.price" For="@(() => p.price)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Product Status</p1>
-                <MudSelect @bind-Value="@p.status"
-                           For="@(() => p.status)"
-                           Margin="Margin.Dense"
-                           T="string"
-                           Variant="Variant.Outlined">
+                <MudSelect @bind-Value="p.status" For="@(() => p.status)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
                     <MudSelectItem Value="@("Available")" />
                     <MudSelectItem Value="@("Unavailable")" />
                 </MudSelect>
@@ -68,29 +40,21 @@
             <MudButton OnClick="Cancel">
                 Cancel
             </MudButton>
-            <MudButton Disabled="@_processing"
-                       @onclick="Submit"
-                       Variant="Variant.Filled"
-                       Color="Color.Primary">
+            <MudButton Disabled="@_processing" @onclick="Submit" Variant="Variant.Filled" Color="Color.Primary">
                 @if (_processing)
                 {
-                    <MudProgressCircular Class="ms-n1"
-                                         Size="Size.Small"
-                                         Indeterminate="true" />
-                    <MudText Class="ms-2">
-                        Please Wait
-                    </MudText>
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Please Wait</MudText>
                 }
                 else
                 {
-                    <MudText>
-                        Apply
-                    </MudText>
+                    <MudText>Apply</MudText>
                 }
             </MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>
+
 
 @code {
     [CascadingParameter] 

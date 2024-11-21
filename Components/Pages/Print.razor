@@ -7,54 +7,37 @@
 @inject ISnackbar SnackBar
 @using System.Net.Http.Headers
 
-<MudDialog TitleClass="mud-primary"
-           DisableSidePadding="true">
+<MudDialog TitleClass="mud-primary" DisableSidePadding="true">
     <TitleContent>
-        <MudText Typo="Typo.h6"
-                 Style="color:white; font-weight: bold;">
-            Billing
-        </MudText>
+        <MudText Typo="Typo.h6" Style="color:white; font-weight: bold;">Billing</MudText>
     </TitleContent>
     <DialogContent>
         <MudContainer Style="max-height: 500px; padding: 10px;">
             <div style="text-align: center; font-family: monospace; font-size: 20px; line-height: 1.6;">
                 <div style="padding-bottom: 10px;">
-                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">
-                        Total Bill
-                    </h5>
-                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;">
-                        <u>@_total</u>
-                    </h5>
+                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">Total Bill</h5>
+                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;"><u>@_total</u></h5>
                 </div>
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <span>Amount</span>&nbsp;&nbsp;
-                    <MudNumericField T="double"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Value="_amount"
-                                     ValueChanged="OnAmountChanged"
-                                     Immediate="true"
-                                     Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
+                    <MudNumericField T="double" Variant="Variant.Outlined" Margin="Margin.Dense" Value="_amount" ValueChanged="OnAmountChanged" Immediate="true" Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
                 </div>
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Change</span>
-                    <span style="font-weight: bold;">
-                        <u>@_change</u>
-                    </span>
+                    <span>Change</span><span style="font-weight: bold;"><u>@_change</u></span>
                 </div>
                 <div style="margin-top: 20px;padding-top: 10px;">
                     <div style="display: flex; justify-content: space-between;">
-                        <MudButton OnClick="Cancel"
-                                   Variant="Variant.Text"
-                                   Color="Color.Secondary"
-                                   Style="font-family: monospace; font-size: 14px;">
-                            Cancel
-                        </MudButton>
-                        <MudButton @onclick="Submit"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Style="font-family: monospace; font-size: 14px;">
-                            Submit(Enter)
+                        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary" Style="font-family: monospace; font-size: 14px;">Cancel</MudButton>
+                        <MudButton Disabled="@_processing" OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary">
+                            @if (_processing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Processing</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Submit</MudText>
+                            }
                         </MudButton>
                     </div>
                 </div>
@@ -62,7 +45,6 @@
         </MudContainer>
     </DialogContent>
 </MudDialog>
-
 
 @code {
     [CascadingParameter]
@@ -72,6 +54,14 @@
     public double _total { get; set; } = 0;
     public double _amount { get; set; } = 0;
     public double _change { get; set; } = 0;
+
+    private async Task Submit()
+    {
+        _processing = true;
+        DoPrint();
+        await Task.Delay(5000);
+        await TempToPurchase();
+    }
 
     private void OnAmountChanged(double value)
     {
@@ -106,29 +96,23 @@
             }
         }
     }
+
     private async Task TempToPurchase()
-        {
+    { 
         try
         {
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{Nav.BaseUri}");
-
-                // Make sure the token is retrieved
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", await Loc.GetItemAsStringAsync("token"));
-
-                // Send the request to trigger the stored procedure
-                HttpResponseMessage response = await client.PostAsync("api/Temp/TempToPurchase", null); // No body needed
-
+                HttpResponseMessage response = await client.PostAsync("api/Temp/TempToPurchase", null);
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = await response.Content.ReadAsStringAsync();
                     int i = JsonConvert.DeserializeObject<int>(responseContent);
-
                     if (i > 0)
                     {
-                        DoPrint();
                         MudDialog.Close();
                         StateHasChanged();
                     }
@@ -146,37 +130,9 @@
         }
     }
 
-    private async Task Submit()
-    {
-        TempToPurchase();
-    }
-
     private async Task Cancel()
     {
         MudDialog.Cancel();
-    }
-
-    // JavaScript function to call DoSomething when Shift + P is pressed
-    private async Task RegisterKeyDown()
-    {
-        await JS.InvokeVoidAsync("enterShortcut", DotNetObjectReference.Create(this));
-    }
-
-    private async Task EscKey()
-    {
-        await JS.InvokeVoidAsync("escShortcut", DotNetObjectReference.Create(this));
-    }
-
-    [JSInvokable]
-    public void ExecuteShortcut()
-    {
-        TempToPurchase();
-    }
-
-    [JSInvokable]
-    public void ExecuteEscShortcut()
-    {
-        MudDialog.Close();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -184,16 +140,8 @@
         if (firstRender)
         {
             await Total();
-            await RegisterKeyDown();
         }
     }
-
-    // An Installed Printer instance
-    private InstalledPrinter MyPrinter { get; set; } = new();
-    // Use default printer?
-    private bool UseDefaultPrinter = true;
-
-    // Printing...
 
     private async Task LoadTemp()
     {
@@ -222,84 +170,104 @@
         }
     }
 
+    private InstalledPrinter MyPrinter { get; set; } = new();
+    private bool UseDefaultPrinter = true;
+    private string AbbreviateName(string name)
+    {
+        // Limit the name to a maximum of 12 characters
+        if (name.Length > 12)
+        {
+            // Split the name into words
+            var words = name.Split(' ');
+
+            if (words.Length > 1)
+            {
+                // Keep the first word fully
+                string abbreviatedName = words[0];
+
+                // Shorten the second word to only a few consonants
+                var secondWord = words[1];
+                string shortenedSecondWord = new string(secondWord.Where(c => "aeiouAEIOU".IndexOf(c) == -1).Take(4).ToArray());  // Keep only consonants and limit to 4 characters
+
+                abbreviatedName += " " + shortenedSecondWord;
+
+                return abbreviatedName.Length > 12 ? abbreviatedName.Substring(0, 12) : abbreviatedName;
+            }
+            else
+            {
+                // If there's only one word, return the first 12 characters
+                return name.Substring(0, 12);
+            }
+        }
+        return name;
+    }
+
     private async void DoPrint()
     {
-        // Check if JSPM Client App is up and running
         if (JSPrintManager.Status == JSPMWSStatus.Open)
         {
-            // Create a ClientPrintJob
             var cpj = new ClientPrintJob();
-            // Set target Printer
             cpj.ClientPrinter = UseDefaultPrinter ? new DefaultPrinter() : MyPrinter;
 
-            // Create ESC/POS commands
-            char esc = (char)0x1B; // ESC byte in hex notation
-            char newLine = (char)0x0A; // LF byte in hex notation
-            string cmds = esc + "@"; // Initializes the printer (ESC @)
+            char esc = (char)0x1B;
+            char newLine = (char)0x0A;
+            string cmds = esc + "@";
 
-            // Set smaller font size (approximately size 8)
-            cmds += esc + "!" + (char)0x01; // Condensed mode for small font size
+            cmds += esc + "!" + (char)0x01;
 
-            // Header
             cmds += "DURIAN GARDEN" + newLine;
-            cmds += "Product       Qty   Price  Total" + newLine;
+            cmds += "Product     Qty  Price  Subtotal" + newLine;
             cmds += "--------------------------------" + newLine;
 
-            // Load and print products
             await LoadTemp();
             if (_t != null)
             {
                 foreach (var temp in _t)
                 {
-                    cmds += $"{temp.name,-12} {temp.quantity,3} {temp.price,7:F2} {temp.total,7:F2}" + newLine;
+                    string abbreviatedName = AbbreviateName(temp.name);
+                    cmds += $"{abbreviatedName,-12} {temp.quantity,3} {temp.price,7:F2} {temp.total,7:F2}" + newLine;
                 }
+                cmds += "--------------------------------" + newLine;
+                cmds += $"Total: ₱{_total,7:F2}" + newLine;
             }
 
-            // Print timestamp
             cmds += newLine + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + newLine;
 
-            // Set the RAW commands to send to the printer
             cpj.PrinterCommands = cmds;
 
-            // Send print job
             JSPrintManager.SendClientPrintJob(cpj);
         }
     }
+
+
 
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
-            // Handle OnGetPrinters event...
             JSPrintManager.OnGetPrinters += () =>
             {
                 if (JSPrintManager.Printers != null &&
                     JSPrintManager.Printers.Length > 0)
                 {
-                    // Display installed printers...
                     StateHasChanged();
                 }
                 else
                 {
                     Console.WriteLine("No printers found...");
                 }
-
             };
 
-            // Handle OnStatusChanged event to detect any WSS status change
             JSPrintManager.OnStatusChanged += () =>
             {
                 StateHasChanged();
 
-                // Status = Open means that JSPM Client App is up and running!
                 if (JSPrintManager.Status == JSPMWSStatus.Open)
                 {
-                    //Try getting local printers...
                     JSPrintManager.TryGetPrinters();
                 }
             };
 
-            // Start WebSocket comm
             JSPrintManager.Start();
         }
 
