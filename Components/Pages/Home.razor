@@ -148,17 +148,30 @@
     <i style="--clr:#00ff0a;"></i>
     <i style="--clr:#ff0057;"></i>
     <i style="--clr:#fffd44;"></i>
+
     <div class="login">
         <h4 style="color:white">DURIAN GARDEN (POS)</h4>
+
+        <!-- Username Input -->
         <div class="inputBx">
             <input type="text" placeholder="Username" @bind-value="username">
         </div>
+
+        <!-- Password Input -->
         <div class="inputBx">
             <input type="password" placeholder="Password" @bind-value="password">
         </div>
+
+        <!-- Sign In Button -->
         <div class="inputBx">
             <input type="submit" value="Sign in" @onclick="UserLogin">
         </div>
+
+        <!-- Display Login Error Message if Login Fails -->
+        @if (loginError)
+        {
+            <div style="color: red; text-align: center;">Invalid Username or Password. Please try again.</div>
+        }
     </div>
 </div>
 
@@ -166,56 +179,73 @@
     private string username = "";
     private string password = "";
     private List<users> u;
+    private bool loginError = false; // To track login errors
 
     private async Task UserLogin()
     {
         u = new List<users>();
-        using (HttpClient client = new HttpClient())
+        loginError = false; // Reset error flag before attempting login
+
+        try
         {
-            client.BaseAddress = new Uri($"{Nav.BaseUri}");
-            HttpResponseMessage json = await client.GetAsync($"api/User/Login?username={username}&password={password}");
-
-            if (json.IsSuccessStatusCode)
+            using (HttpClient client = new HttpClient())
             {
-                string content = await json.Content.ReadAsStringAsync();
-                List<users> code = JsonConvert.DeserializeObject<List<users>>(content);
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                HttpResponseMessage json = await client.GetAsync($"api/User/Login?username={username}&password={password}");
 
-                if (code.Count > 0)
+                if (json.IsSuccessStatusCode)
                 {
-                    u.Add(new users()
-                        {
-                            userID = code[0].userID,
-                            token = code[0].token,
-                            name = code[0].name,
-                            username = code[0].username,
-                            role = code[0].role
-                        });
-                    await LocalStorage.SetItemAsStringAsync("token", u[0].token);
-                    await LocalStorage.SetItemAsStringAsync("role", u[0].role);
-                    await LocalStorage.SetItemAsStringAsync("name", u[0].name);
+                    string content = await json.Content.ReadAsStringAsync();
+                    List<users> code = JsonConvert.DeserializeObject<List<users>>(content);
 
-                    if (u[0].role.ToLower() == "cashier")
+                    if (code.Count > 0)
                     {
-                        Nav.NavigateTo("/counter");
-                    }
-                    else if (u[0].role.ToLower() == "admin")
-                    {
-                        Nav.NavigateTo("/products");
+                        // Store the user's info and token
+                        var user = code[0];
+                        u.Add(new users()
+                            {
+                                userID = user.userID,
+                                token = user.token,
+                                name = user.name,
+                                username = user.username,
+                                role = user.role
+                            });
+
+                        // Save user data to local storage
+                        await LocalStorage.SetItemAsStringAsync("token", u[0].token);
+                        await LocalStorage.SetItemAsStringAsync("role", u[0].role);
+                        await LocalStorage.SetItemAsStringAsync("name", u[0].name);
+
+                        // Navigate based on user role
+                        if (u[0].role.ToLower() == "cashier")
+                        {
+                            Nav.NavigateTo("/counter");
+                        }
+                        else if (u[0].role.ToLower() == "admin")
+                        {
+                            Nav.NavigateTo("/products");
+                        }
+                        else
+                        {
+                            // Handle any other role here if needed
+                        }
                     }
                     else
                     {
-                       //
+                        loginError = true; // Invalid credentials
                     }
                 }
                 else
                 {
-                   //
+                    loginError = true; // API call failed
                 }
             }
-            else
-            {
-               //
-            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any exceptions such as network issues
+            loginError = true;
+            Console.WriteLine($"Login error: {ex.Message}");
         }
     }
 }

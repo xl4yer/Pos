@@ -1,5 +1,4 @@
-﻿using Microsoft.Graph.Models;
-using Pos.Class;
+﻿using Pos.Class;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
 using Pos.Services;
