@@ -85,7 +85,7 @@
                     <!-- Table Toolbar -->
                     <ToolBarContent>
                         <MudToolBar>
-                            <h5><u>Product List</u></h5> &nbsp;&nbsp;&nbsp;
+                            <h5 style="font-family:'Segoe Script'">Product List</h5> &nbsp;&nbsp;&nbsp;
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" />
                         </MudToolBar>
                     </ToolBarContent>
@@ -246,10 +246,6 @@
                     var contentResponse = await response.Content.ReadAsStringAsync();
                     p = JsonConvert.DeserializeObject<products[]>(contentResponse);
                     StateHasChanged();
-                }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }

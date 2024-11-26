@@ -345,7 +345,7 @@ else
                         <!-- Product Code Input -->
                         <MudToolBar>
                             <MudTextField @bind-Value="_temp.code"
-                                          Style="font-family:monospace; font-size: 16px;"
+                                          Style="font-family:'Segoe Script'; font-size: 16px;"
                                           Placeholder="Input product code here"
                                           Margin="Margin.Dense"
                                           Variant="Variant.Outlined"
@@ -402,14 +402,21 @@ else
                         }
                         else
                         {
-                            <MudText Align="Align.Center" Style="font-family:monospace; font-size: 25px;">No Transactions Found</MudText>
+                            <MudText Align="Align.Center" Style="font-family:'Segoe Script'; font-size: 25px;">No Transactions Found</MudText>
                         }
 
                         <!-- Total Amount -->
                         <MudToolBar>
                             <MudSpacer />
                             <MudText Typo="Typo.h5" Align="Align.Right" Style="font-size: 20px; font-family: monospace;">
-                                Total: <u>₱@_total</u>
+                                @if (t == null || t.Length == 0)
+                                {
+                                    <div>Total: <u>₱0</u></div>
+                                }
+                                else
+                                {
+                                    <div>Total: <u>₱@_total</u></div>
+                                }
                             </MudText>
                         </MudToolBar>
                     </MudCard>
@@ -499,10 +506,6 @@ else
                 string contentResponse = await response.Content.ReadAsStringAsync();
                 _total = JsonConvert.DeserializeObject<double>(contentResponse);
                 StateHasChanged();
-            }
-            else
-            {
-                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
             }
         }
     }
@@ -706,10 +709,6 @@ else
                         SnackBar.Add("No item found to delete", Severity.Warning);
                     }
                 }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                }
             }
         }
         catch (Exception ex)
@@ -732,10 +731,6 @@ else
                     var contentResponse = await response.Content.ReadAsStringAsync();
                     p = JsonConvert.DeserializeObject<products[]>(contentResponse);
                     StateHasChanged();
-                }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
@@ -807,10 +802,6 @@ else
                     var contentResponse = await response.Content.ReadAsStringAsync();
                     t = JsonConvert.DeserializeObject<temp[]>(contentResponse);
                     StateHasChanged();
-                }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }

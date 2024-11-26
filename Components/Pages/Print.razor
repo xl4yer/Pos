@@ -159,6 +159,7 @@
                 else
                 {
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    MudDialog.Close();
                 }
             }
         }
@@ -195,10 +196,6 @@
                     var contentResponse = await response.Content.ReadAsStringAsync();
                     _t = JsonConvert.DeserializeObject<temp[]>(contentResponse);
                     StateHasChanged();
-                }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                 }
             }
         }
