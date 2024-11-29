@@ -404,7 +404,7 @@ else
 
         hubConnection.On("client", async () =>
         {
-            await Total();
+            await GetTotal();
             await LoadTemp();
             StateHasChanged();
         });
@@ -418,11 +418,11 @@ else
         {
             await LoadTemp();
             await LoadProduct();
-            await Total();
+            await GetTotal();
         }
     }
 
-    private async Task Total()
+    private async Task GetTotal()
     {
         if (hubConnection is not null)
         {
@@ -481,7 +481,7 @@ else
                     {
                         StateHasChanged();
                         await LoadTemp();
-                        await Total();
+                        await GetTotal();
                         await JS.InvokeVoidAsync("document.activeElement.blur");
                         await Clear();
                         await inputElement.FocusAsync();
@@ -510,6 +510,8 @@ else
 
     private async Task Logout()
     {
+        await Loc.RemoveItemAsync("name");
+        await Loc.RemoveItemAsync("token");
         Nav.NavigateTo("/");
     }
 
@@ -543,7 +545,7 @@ else
                     {
                         StateHasChanged();
                         await LoadTemp();
-                        await Total();
+                        await GetTotal();
                     }
                 }
                 else
@@ -586,7 +588,7 @@ else
                     if (i > 0)
                     {
                         await LoadTemp();
-                        await Total();
+                        await GetTotal();
                         StateHasChanged();
                     }
                 }

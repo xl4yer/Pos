@@ -1,84 +1,88 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
+@inject ILocalStorageService Loc
 
 <MudThemeProvider @rendermode="RenderMode.InteractiveServer" />
 <MudPopoverProvider @rendermode="RenderMode.InteractiveServer" />
 <MudDialogProvider FullWidth="true"
-                   CloseButton="true"
-                   MaxWidth="MaxWidth.ExtraSmall"
-                   Position="DialogPosition.TopCenter"
-                   @rendermode="RenderMode.InteractiveServer" />
+CloseButton="true"
+MaxWidth="MaxWidth.ExtraSmall"
+Position="DialogPosition.TopCenter"
+@rendermode="RenderMode.InteractiveServer" />
 <MudSnackbarProvider @rendermode="RenderMode.InteractiveServer" />
 
 <style>
     body {
-        font-family: monospace;
+    font-family: monospace;
     }
 
     .img2 {
-        width: 35px;
-        border-radius: 50px;
-        float: left;
+    width: 35px;
+    border-radius: 50%;
+    float: left;
     }
 
     .logout {
-        font-size: .8em;
-        font-family: 'Oswald', sans-serif;
-        position: relative;
-        right: -18px;
-        bottom: -10px;
-        overflow: hidden;
-        letter-spacing: 3px;
-        opacity: 0;
-        transition: opacity .45s;
-        -webkit-transition: opacity .35s;
-        color: white;
+    font-size: 0.8em;
+    font-family: 'Oswald', sans-serif;
+    position: relative;
+    right: -18px;
+    bottom: -10px;
+    overflow: hidden;
+    letter-spacing: 3px;
+    opacity: 0;
+    transition: opacity 0.45s;
+    -webkit-transition: opacity 0.35s;
+    color: white;
     }
 
     .button {
-        text-decoration: none;
-        float: right;
-        padding: 12px;
-        margin: 15px;
-        color: white;
-        width: 50px;
-        transition: width .35s;
-        -webkit-transition: width .35s;
-        overflow: hidden;
+    text-decoration: none;
+    float: right;
+    padding: 12px;
+    margin: 15px;
+    color: white;
+    width: 50px;
+    transition: width 0.35s;
+    -webkit-transition: width 0.35s;
+    overflow: hidden;
     }
 
     a:hover {
-        width: 130px;
+    width: 130px;
     }
 
-        a:hover .logout {
-            opacity: .9;
-        }
+    a:hover .logout {
+    opacity: 0.9;
+    }
 
     a {
-        text-decoration: none;
+    text-decoration: none;
     }
 
     @@media (max-width: 600px) {
-        .img2 {
-            width: 25px;
-        }
+    .img2
 
-        .button {
-            padding: 8px;
-            margin: 10px;
-            width: 40px;
-        }
+    {
+    width: 25px;
+    }
 
-        a:hover {
-            width: 100px;
-        }
+    .button {
+    padding: 8px;
+    margin: 10px;
+    width: 40px;
+    }
 
-        .logout {
-            font-size: .7em;
-            right: -12px;
-            bottom: -8px;
-        }
+    a:hover {
+    width: 100px;
+    }
+
+    .logout {
+    font-size: 0.7em;
+    right: -12px;
+    bottom: -8px;
+    }
+
     }
 </style>
 
@@ -88,14 +92,14 @@
     </div>
 
     <main>
-        <MudToolBar Style="border-bottom:solid gray 0.5px; class="top-row px-4">
+        <MudToolBar Class="top-row px-4" Style="border-bottom: solid gray 0.5px;">
             <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="mr-5" />
             <MudText Align="Align.Left"><b>DURIAN GARDEN (POS)</b></MudText>
             <MudSpacer />
             <div class="navigation">
                 <a class="button" href="/" @onclick="Logout">
-                    <img class="img2" src="cashier.png">
-                    <div class="logout" style="color:black">LOGOUT</div>
+                    <img class="img2" src="cashier.png" />
+                    <div class="logout" style="color: black;">LOGOUT</div>
                 </a>
             </div>
         </MudToolBar>
@@ -112,8 +116,12 @@
 </div>
 
 @code {
+    private string name = "";
+
     private async Task Logout()
     {
+        await Loc.RemoveItemAsync("name");
+        await Loc.RemoveItemAsync("token");
         Nav.NavigateTo("/");
     }
 }
