@@ -29,19 +29,17 @@
         height: 45px;
         border-radius: 50%;
     }
+
 </style>
 
 <div class="container mt-5">
     <div class="row">
         @if (p != null && p.Any())
         {
-            <!-- Product Form Section (Left Column) -->
             <div class="col-sm-4">
                 <EditForm Model="@_p" OnValidSubmit="OnValidSubmit">
                     <DataAnnotationsValidator />
                     <MudContainer Style="max-height: 600px;">
-
-                        <!-- Photo Upload Section -->
                         <div class="photo">
                             <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
                                 <ActivatorContent>
@@ -49,27 +47,19 @@
                                 </ActivatorContent>
                             </MudFileUpload>
                         </div><br />
-
-                        <!-- Product Code Input -->
                         <div>
                             <p>Product Code</p>
                             <MudTextField @bind-Value="@_p.code" Clearable For="@(() => _p.code)" Variant="Variant.Outlined" Margin="Margin.Dense" />
                         </div><br />
-
-                        <!-- Product Name Input -->
                         <div>
                             <p>Product Name</p>
                             <MudTextField @bind-Value="@_p.name" Clearable For="@(() => _p.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
                         </div><br />
-
-                        <!-- Product Price Input -->
                         <div>
                             <p>Product Price</p>
                             <MudTextField @bind-Value="@_p.price" Clearable For="@(() => _p.price)" Variant="Variant.Outlined" Margin="Margin.Dense" />
                         </div>
                     </MudContainer>
-
-                    <!-- Action Buttons -->
                     <MudToolBar>
                         <MudSpacer />
                         <MudButton>Clear</MudButton>
@@ -77,20 +67,13 @@
                     </MudToolBar>
                 </EditForm>
             </div>
-
-            <!-- Product List Section (Right Column) -->
             <div class="col-sm-8">
                 <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
-
-                    <!-- Table Toolbar -->
                     <ToolBarContent>
-                        <MudToolBar>
-                            <h5 style="font-family:'Segoe Script'">Product List</h5> &nbsp;&nbsp;&nbsp;
-                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" />
-                        </MudToolBar>
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> 
+                            <MudSpacer/>
+                            <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     </ToolBarContent>
-
-                    <!-- Table Header -->
                     <HeaderContent>
                         <MudTh Style="height: 50px;">Photo</MudTh>
                         <MudTh>Product Code</MudTh>
@@ -99,8 +82,6 @@
                         <MudTh>Status</MudTh>
                         <MudTh>Action</MudTh>
                     </HeaderContent>
-
-                    <!-- Table Rows -->
                     <RowTemplate>
                         <MudTd DataLabel="Photo">
                             <img src="data:image/bmp;base64, @(Convert.ToBase64String(@context.photo))" class="img" />
@@ -123,31 +104,16 @@
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
-
-                <!-- Product Search Section -->
-                <MudToolBar Justify="Justify.End">
-                    <MudTextField @bind-Value="txtsearch"
-                                  Clearable
-                                  TextChanged="Search"
-                                  Adornment="Adornment.End"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  AdornmentColor="Color.Tertiary"
-                                  Label="What are you looking for?"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
-                </MudToolBar>
             </div>
         }
         else
         {
-            <!-- Loader Section (if no products found) -->
             <div class="d-flex justify-content-center my-4 centered">
                 <div class="loader"></div>
             </div>
         }
     </div>
 </div>
-
 
 @code {
     private products[]? p;
@@ -165,12 +131,13 @@
     [Parameter] public byte[] _photo { get; set; } = null;
     IList<IBrowserFile> files = new List<IBrowserFile>();
     public bool def { get; set; }
+    public string role = "";
 
     public void OnValidSubmit(EditContext context)
     {
 
     }
-
+ 
     protected override void OnInitialized()
     {
         if (img64 != null && img64.Length > 0)
@@ -224,11 +191,15 @@
         await LoadProduct();
     }
 
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+       
         if (firstRender)
         {
-            await LoadProduct();
+            role = await Loc.GetItemAsStringAsync("role");
+            await LoadProduct();       
         }
     }
 

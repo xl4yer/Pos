@@ -9,9 +9,7 @@
 
 <MudDialog TitleClass="mud-primary" DisableSidePadding="true">
     <TitleContent>
-        <MudText Typo="Typo.h6" Style="color:white; font-weight: bold;">
-            Billing
-        </MudText>
+        <MudText Typo="Typo.h6" Style="color:white; font-weight: bold;">Billing</MudText>
     </TitleContent>
 
     <DialogContent>
@@ -20,48 +18,30 @@
 
                 <!-- Total Bill Section -->
                 <div style="padding-bottom: 10px;">
-                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">
-                        Total Bill
-                    </h5>
-                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;">
-                        <u>@_total</u>
-                    </h5>
+                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">Total Bill</h5>
+                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;"><u>@_total</u></h5>
                 </div>
 
                 <!-- Amount Section -->
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <span>Amount</span>&nbsp;&nbsp;
-                    <MudNumericField T="double"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Value="_amount"
-                                     ValueChanged="OnAmountChanged"
-                                     Immediate="true"
+                    <MudNumericField T="double" Variant="Variant.Outlined" Margin="Margin.Dense" Value="_amount"
+                                     ValueChanged="OnAmountChanged" Immediate="true"
                                      Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
                 </div>
 
                 <!-- Change Section -->
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <span>Change</span>
-                    <span style="font-weight: bold;">
-                        <u>@_change</u>
-                    </span>
+                    <span style="font-weight: bold;"><u>@_change</u></span>
                 </div>
 
                 <!-- Buttons Section -->
                 <div style="margin-top: 20px; padding-top: 10px;">
                     <div style="display: flex; justify-content: space-between;">
-                        <MudButton OnClick="Cancel"
-                                   Variant="Variant.Text"
-                                   Color="Color.Secondary"
-                                   Style="font-family: monospace; font-size: 14px;">
-                            Cancel
-                        </MudButton>
-
-                        <MudButton Disabled="@_processing"
-                                   OnClick="Submit"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary">
+                        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary"
+                                   Style="font-family: monospace; font-size: 14px;">Cancel</MudButton>
+                        <MudButton Disabled="@_processing" OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary">
                             @if (_processing)
                             {
                                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -89,6 +69,7 @@
     public double _change { get; set; } = 0;
     private InstalledPrinter MyPrinter { get; set; } = new();
     private bool UseDefaultPrinter = true;
+    private string name = "";
 
     private async Task Submit()
     {
@@ -178,6 +159,7 @@
     {
         if (firstRender)
         {
+            name = await Loc.GetItemAsStringAsync("name");
             await Total();
         }
     }
@@ -240,6 +222,8 @@
             cmds += esc + "!" + (char)0x01;
 
             cmds += "DURIAN GARDEN" + newLine;
+            cmds += "Brgy. Sulit P.S.C." + newLine;
+            cmds += "09852254675" + newLine;
             cmds += "Product     Qty  Price  Subtotal" + newLine;
             cmds += "--------------------------------" + newLine;
 
@@ -252,10 +236,11 @@
                     cmds += $"{abbreviatedName,-12} {temp.quantity,3} {temp.price,7:F2} {temp.total,7:F2}" + newLine;
                 }
                 cmds += "--------------------------------" + newLine;
-                cmds += $"Total: ₱{_total,7:F2}" + newLine;
+                cmds += $"Total: {_total,7:F2}" + newLine;
             }
 
             cmds += newLine + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + newLine;
+            cmds += $"Cashier:{name}" + newLine;
 
             cpj.PrinterCommands = cmds;
 
