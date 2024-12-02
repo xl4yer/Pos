@@ -6,6 +6,8 @@
 @inject IJSRuntime IJS
 @layout Components.Layout.LoginLayout
 
+<PageTitle>Login</PageTitle>
+
 <style>
     * {
         margin: 0;
@@ -191,7 +193,7 @@
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                HttpResponseMessage json = await client.GetAsync($"api/User/Login?username={username}&password={password}");
+                HttpResponseMessage json = await client.GetAsync($"api/User/UserLogin?username={username}&password={password}");
 
                 if (json.IsSuccessStatusCode)
                 {

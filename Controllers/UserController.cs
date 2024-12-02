@@ -18,9 +18,30 @@ namespace Pos.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<List<users>> Login(string username, string password)
+        public async Task<List<users>> UserLogin(string username, string password)
         {
-            var ret = await xservices.Login(username, password);
+            var ret = await xservices.UserLogin(username, password);
+            return ret;
+        }
+
+        [HttpGet]
+        public async Task<List<users>> GetUsers()
+        {
+            var ret = await xservices.GetUsers();
+            return ret;
+        }
+
+        [HttpPost]
+        public async Task<int> AddUser([FromBody] users u)
+        {
+            var ret = await xservices.AddUser(u);
+            return ret;
+        }
+
+        [HttpPut]
+        public async Task<int> UpdateUser([FromBody] users u)
+        {
+            var ret = await xservices.UpdateUser(u);
             return ret;
         }
     }

@@ -17,7 +17,7 @@ namespace Pos.Services
             _constring = constring;
             Configuration = configuration;
         }
-        public async Task<List<products>> Products()
+        public async Task<List<products>> GetProducts()
         {
             List<products> m = new List<products>();
             using (var con = new MySqlConnection(_constring.GetConnection()))
@@ -25,7 +25,7 @@ namespace Pos.Services
                 try
                 {
                     await con.OpenAsync().ConfigureAwait(false);
-                    var com = new MySqlCommand("ViewProduct", con)
+                    var com = new MySqlCommand("GetProducts", con)
                     {
                         CommandType = CommandType.StoredProcedure,
                     };

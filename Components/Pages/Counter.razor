@@ -405,7 +405,7 @@ else
         hubConnection.On("client", async () =>
         {
             await GetTotal();
-            await LoadTemp();
+            await GetTemp();
             StateHasChanged();
         });
 
@@ -416,8 +416,8 @@ else
     {
         if (firstRender)
         {
-            await LoadTemp();
-            await LoadProduct();
+            await GetTemp();
+            await GetProducts();
             await GetTotal();
         }
     }
@@ -480,7 +480,7 @@ else
                     if (i > 0)
                     {
                         StateHasChanged();
-                        await LoadTemp();
+                        await GetTemp();
                         await GetTotal();
                         await JS.InvokeVoidAsync("document.activeElement.blur");
                         await Clear();
@@ -544,7 +544,7 @@ else
                     if (i > 0)
                     {
                         StateHasChanged();
-                        await LoadTemp();
+                        await GetTemp();
                         await GetTotal();
                     }
                 }
@@ -587,7 +587,7 @@ else
 
                     if (i > 0)
                     {
-                        await LoadTemp();
+                        await GetTemp();
                         await GetTotal();
                         StateHasChanged();
                     }
@@ -650,14 +650,14 @@ else
         }
     }
 
-    private async Task LoadProduct()
+    private async Task GetProducts()
     {
         try
         {
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                var response = await client.GetAsync($"api/Product/Products");
+                var response = await client.GetAsync($"api/Product/GetProducts");
                 if (response.IsSuccessStatusCode)
                 {
                     await Task.Delay(1000);
@@ -695,7 +695,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(txtsearch))
         {
-            LoadProduct();
+            GetProducts();
             return;
         }
         using (HttpClient client = new HttpClient())
@@ -717,7 +717,7 @@ else
         }
     }
 
-    private async Task LoadTemp()
+    private async Task GetTemp()
     {
         if (hubConnection is not null)
         {
@@ -728,7 +728,7 @@ else
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                var response = await client.GetAsync($"api/Temp/Temp");
+                var response = await client.GetAsync($"api/Temp/GetTemp");
                 if (response.IsSuccessStatusCode)
                 {
                     await Task.Delay(1000);

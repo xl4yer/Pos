@@ -98,7 +98,7 @@
         }
     }
 
-    private async Task Total()
+    private async Task GetTotal()
     {
         using (HttpClient client = new HttpClient())
         {
@@ -160,18 +160,18 @@
         if (firstRender)
         {
             name = await Loc.GetItemAsStringAsync("name");
-            await Total();
+            await GetTotal();
         }
     }
 
-    private async Task LoadTemp()
+    private async Task GetTemp()
     {
         try
         {
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                var response = await client.GetAsync($"api/Temp/Temp");
+                var response = await client.GetAsync($"api/Temp/GetTemp");
                 if (response.IsSuccessStatusCode)
                 {
                     await Task.Delay(1000);
@@ -227,7 +227,7 @@
             cmds += "Product     Qty  Price  Subtotal" + newLine;
             cmds += "--------------------------------" + newLine;
 
-            await LoadTemp();
+            await GetTemp();
             if (_t != null)
             {
                 foreach (var temp in _t)

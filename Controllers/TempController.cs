@@ -19,9 +19,9 @@ namespace Pos.Controllers
         }
 
         [HttpGet]
-        public async Task<List<temp>> Temp()
+        public async Task<List<temp>> GetTemp()
         {
-            var ret = await xservices.Temp();
+            var ret = await xservices.GetTemp();
             return ret;
         }
 

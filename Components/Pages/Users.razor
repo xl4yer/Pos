@@ -1,60 +1,156 @@
 ﻿@page "/users"
+@attribute [StreamRendering(true)]
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject ILocalStorageService Loc
+@using System.Net.Http.Headers
+@inject ISnackbar SnackBar
+@inject IDialogService Dialog
 
-<style>
-    .page_404 {
-        padding: 40px 0;
-        background: #fff;
-        font-family: 'Arvo', serif;
-    }
+<PageTitle>Users</PageTitle>
 
-        .page_404 img {
-            width: 100%;
-        }
-
-    .four_zero_four_bg {
-        background-image: url(https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif);
-        height: 400px;
-        background-position: center;
-    }
-
-
-        .four_zero_four_bg h1 {
-            font-size: 80px;
-        }
-
-        .four_zero_four_bg h3 {
-            font-size: 80px;
-        }
-
-    .link_404 {
-        color: #fff !important;
-        padding: 10px 20px;
-        background: #39ac31;
-        margin: 20px 0;
-        display: inline-block;
-    }
-
-    .contant_box_404 {
-        margin-top: -50px;
+<style type="text/css">
+    .centered {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
     }
 </style>
-<center>
-    <section class="page_404">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12 ">
-                    <div class="col-sm-10 col-sm-offset-1  text-center">
-                        <div class="four_zero_four_bg">
-                            <h1 class="text-center " style="font-size:50px;">Under Construction.......</h1>
+
+<div class="container mt-5">
+    <div class="row">
+        @if (u != null && u.Any())
+        {
+            <div class="col-sm-4">
+                <br />
+                <MudCard Elevation="1">
+                <EditForm Model="@_u" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator />
+                    <MudContainer Style="max-height: 600px;">
+                        <div>
+                            <p1>Name</p1>
+                            <MudTextField @bind-Value="@_u.name" Clearable For="@(() => _u.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </div><br />
+                        <div>
+                            <p1>Username</p1>
+                            <MudTextField @bind-Value="@_u.username" Clearable For="@(() => _u.username)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </div><br />
+                        <div>
+                            <p1>Password</p1>
+                            <MudTextField @bind-Value="@_u.password" Clearable For="@(() => _u.password)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </div><br />
+                        <div>
+                            <p1>Role</p1>
+                            <MudSelect @bind-Value="_u.role" For="@(() => _u.role)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("Admin")" />
+                                <MudSelectItem Value="@("Cashier")" />
+                            </MudSelect>
                         </div>
-                        <div class="contant_box_404">
-                            <h3 class="h2">
-                                Coming soon.......
-                            </h3>
-                        </div>
-                    </div>
-                </div>
+                    </MudContainer>
+                    <MudToolBar>
+                        <MudSpacer />
+                        <MudButton>Clear</MudButton>
+                        <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add User</MudButton>
+                    </MudToolBar>
+                </EditForm>
+                </MudCard>
             </div>
-        </div>
-    </section>
-</center>
+            <div class="col-sm-8">
+                <MudTable Class="ma-5" Dense="true" Hover="true" Items="@u" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
+                    <ToolBarContent>
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" />
+                        <MudSpacer />
+                        <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary" Placeholder="Search user" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Username</MudTh>
+                        <MudTh>Password</MudTh>
+                        <MudTh>Role</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Code">@context.name</MudTd>
+                        <MudTd DataLabel="Name">@context.username</MudTd>
+                        <MudTd DataLabel="Price">@context.password</MudTd>
+                        <MudTd DataLabel="Price">@context.role</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Update" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" @onclick="(e => UpdateUser(context.userID))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-center my-4 centered">
+                <div class="loader"></div>
+            </div>
+        }
+    </div>
+</div>
+
+@code
+{
+    private users[]? u;
+    [Parameter] 
+    public users _u { get; set; } = new users();
+    bool fixed_header = true;
+    bool fixed_footer = false;
+    private string txtsearch { get; set; }
+
+    private async Task UpdateUser(int id){
+
+    }
+
+    private async Task Refresh()
+    {
+
+    }
+
+    private async Task Submit()
+    {
+
+    }
+
+    public void OnValidSubmit(EditContext context)
+    {
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await GetUsers();
+        }
+    }
+
+    private async Task GetUsers()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var response = await client.GetAsync($"api/User/GetUsers");
+                if (response.IsSuccessStatusCode)
+                {
+                    await Task.Delay(1000);
+                    var contentResponse = await response.Content.ReadAsStringAsync();
+                    u = JsonConvert.DeserializeObject<users[]>(contentResponse);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task Search(){
+
+    }
+}

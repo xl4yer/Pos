@@ -22,7 +22,7 @@ namespace Pos.Services
             Configuration = configuration;
             _appSetting = appSettings.Value;
         }
-        public async Task<List<users>> Login(string username, string password)
+        public async Task<List<users>> UserLogin(string username, string password)
         {
             List<users> u = new();
             using (var con = new MySqlConnection(_constring.GetConnection()))
@@ -41,7 +41,7 @@ namespace Pos.Services
                 {
                     u.Add(new users
                     {
-                        userID = rdr["userID"].ToString(),
+                        userID = Convert.ToInt32(rdr["userID"]),
                         name = rdr["Name"].ToString(),
                         username = rdr["Username"].ToString(),
                         password = rdr["Password"].ToString(),
@@ -69,6 +69,103 @@ namespace Pos.Services
                 }
                 return u;
             }
+        }
+
+        public async Task<List<users>> GetUsers()
+        {
+            List<users> u = new List<users>();
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("GetUsers", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    var rdr = await com.ExecuteReaderAsync().ConfigureAwait(false);
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        u.Add(new users
+                        {
+                            userID = Convert.ToInt32(rdr["userID"]),
+                            name = rdr["name"].ToString(),
+                            username = rdr["username"].ToString(),
+                            password = rdr["password"].ToString(),
+                            role = rdr["role"].ToString()
+                        });
+                    }
+                    await rdr.CloseAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception here
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return u;
+        }
+
+        public async Task<int> AddUser(users u)
+        {
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("AddUser", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    com.Parameters.AddWithValue("_name", u.name);
+                    com.Parameters.AddWithValue("_username", u.username);
+                    com.Parameters.AddWithValue("_password", u.password);
+                    com.Parameters.AddWithValue("_role", u.role);
+                    return await com.ExecuteNonQueryAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception here
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return 0;
+        }
+
+        public async Task<int> UpdateUser(users u)
+        {
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("UpdateUser", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    com.Parameters.AddWithValue("_userID", u.userID);
+                    com.Parameters.AddWithValue("_name", u.name);
+                    com.Parameters.AddWithValue("_username", u.username);
+                    com.Parameters.AddWithValue("_password", u.password);
+                    com.Parameters.AddWithValue("_role", u.role);
+                    return await com.ExecuteNonQueryAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception here
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return 0;
         }
     }
 }

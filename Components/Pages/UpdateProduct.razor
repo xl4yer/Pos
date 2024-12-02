@@ -25,7 +25,8 @@
                 <MudTextField Clearable @bind-Value="p.price" For="@(() => p.price)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Product Status</p1>
                 <MudSelect @bind-Value="p.status" For="@(() => p.status)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("Available")" /><MudSelectItem Value="@("Unavailable")" />
+                    <MudSelectItem Value="@("Available")" />
+                    <MudSelectItem Value="@("Unavailable")" />
                 </MudSelect>
             </MudContainer>
         </DialogContent>

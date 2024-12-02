@@ -17,9 +17,9 @@ namespace Pos.Controllers
         }
 
         [HttpGet]
-        public async Task<List<products>> Products()
+        public async Task<List<products>> GetProducts()
         {
-            var ret = await xservices.Products();
+            var ret = await xservices.GetProducts();
             return ret;
         }
 
