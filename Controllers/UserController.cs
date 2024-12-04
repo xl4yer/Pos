@@ -44,5 +44,12 @@ namespace Pos.Controllers
             var ret = await xservices.UpdateUser(u);
             return ret;
         }
+
+        [HttpGet]
+        public async Task<List<users>> SearchUser(string s)
+        {
+            var ret = await xservices.SearchUser(s);
+            return ret;
+        }
     }
 }

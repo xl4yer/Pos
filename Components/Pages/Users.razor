@@ -25,55 +25,70 @@
             <div class="col-sm-4">
                 <br />
                 <MudCard Elevation="1">
-                <EditForm Model="@_u" OnValidSubmit="OnValidSubmit">
-                    <DataAnnotationsValidator />
-                    <MudContainer Style="max-height: 600px;">
-                        <div>
-                            <p1>Name</p1>
-                            <MudTextField @bind-Value="@_u.name" Clearable For="@(() => _u.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div><br />
-                        <div>
-                            <p1>Username</p1>
-                            <MudTextField @bind-Value="@_u.username" Clearable For="@(() => _u.username)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div><br />
-                        <div>
-                            <p1>Password</p1>
-                            <MudTextField @bind-Value="@_u.password" Clearable For="@(() => _u.password)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div><br />
-                        <div>
-                            <p1>Role</p1>
-                            <MudSelect @bind-Value="_u.role" For="@(() => _u.role)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("Admin")" />
-                                <MudSelectItem Value="@("Cashier")" />
-                            </MudSelect>
-                        </div>
-                    </MudContainer>
-                    <MudToolBar>
-                        <MudSpacer />
-                        <MudButton>Clear</MudButton>
-                        <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add User</MudButton>
-                    </MudToolBar>
-                </EditForm>
+                    <EditForm Model="@_u" OnValidSubmit="OnValidSubmit">
+                        <DataAnnotationsValidator />
+                        <MudContainer Style="max-height: 600px;">
+                            <div>
+                                <p1>Name</p1>
+                                <MudTextField @bind-Value="@_u.name" Clearable For="@(() => _u.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div><br />
+                            <div>
+                                <p1>Username</p1>
+                                <MudTextField @bind-Value="@_u.username" Clearable For="@(() => _u.username)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div><br />
+                            <div>
+                                <p1>Password</p1>
+                                <MudTextField @bind-Value="@_u.password" Clearable For="@(() => _u.password)" Variant="Variant.Outlined" Margin="Margin.Dense" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" />
+                            </div><br />
+                            <div>
+                                <p1>Role</p1>
+                                <MudSelect @bind-Value="_u.role" For="@(() => _u.role)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Admin")" />
+                                    <MudSelectItem Value="@("Cashier")" />
+                                </MudSelect>
+                            </div>
+                        </MudContainer>
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudButton>Clear</MudButton>
+                            <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add User</MudButton>
+                        </MudToolBar>
+                    </EditForm>
                 </MudCard>
             </div>
             <div class="col-sm-8">
                 <MudTable Class="ma-5" Dense="true" Hover="true" Items="@u" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
                     <ToolBarContent>
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> &nbsp; &nbsp;
+                        <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Secondary" OnClick="@Show">
+                            <MudIcon Icon="@((hide) ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)" />
+                        </MudButton>
                         <MudSpacer />
                         <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary" Placeholder="Search user" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     </ToolBarContent>
                     <HeaderContent>
+                        <MudTh>UserID</MudTh>
                         <MudTh>Name</MudTh>
                         <MudTh>Username</MudTh>
                         <MudTh>Password</MudTh>
                         <MudTh>Role</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="Code">@context.name</MudTd>
-                        <MudTd DataLabel="Name">@context.username</MudTd>
-                        <MudTd DataLabel="Price">@context.password</MudTd>
-                        <MudTd DataLabel="Price">@context.role</MudTd>
+                        <MudTd DataLabel="UserID">@context.userID</MudTd>
+                        <MudTd DataLabel="Name">@context.name</MudTd>
+                        <MudTd DataLabel="Username">@context.username</MudTd>
+                        <MudTd DataLabel="Password">
+                            @if (hide)
+                            {
+                                @context.password
+                            }
+                            else
+                            {
+                                <p1>********</p1>
+
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Role">@context.role</MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Update" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" @onclick="(e => UpdateUser(context.userID))" />
                         </MudTd>
@@ -98,19 +113,122 @@
     bool fixed_header = true;
     bool fixed_footer = false;
     private string txtsearch { get; set; }
+    private bool hide = false;
+    bool isShow;
+    bool showPass;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
 
-    private async Task UpdateUser(int id){
+    void ShowPassword()
+    {
+        @if (showPass)
+        {
+            showPass = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            showPass = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
 
+    void Click()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+    private void Show()
+    {
+        hide = !hide;
+    }
+
+    private async Task UpdateUser(int id)
+    {
+        var parameters = new DialogParameters();
+        var update = u.FirstOrDefault(_ => _.userID == id);
+        parameters.Add("u", update);
+        var dialog = await Dialog.Show<UpdateUser>("Update User", parameters).Result;
     }
 
     private async Task Refresh()
     {
-
+        await GetUsers();
     }
 
     private async Task Submit()
     {
+        if (string.IsNullOrEmpty(_u.name) && string.IsNullOrEmpty(_u.username)
+        && string.IsNullOrEmpty(_u.password) && string.IsNullOrEmpty(_u.role))
+        {
+            SnackBar.Add("Fill The Required Fields!", Severity.Warning);
+        }
+        else
+        {
+            int i = 0;
+            try
+            {
+                var u = new users
+                    {
+                        name = _u.name,
+                        username = _u.username,
+                        password = _u.password,
+                        role = _u.role
+                    };
 
+                using (HttpClient client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                    var json = JsonConvert.SerializeObject(u);
+                    HttpContent content = new StringContent(json);
+                    content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", await Loc.GetItemAsStringAsync("token"));
+
+                    HttpResponseMessage response = await client.PostAsync("api/User/AddUser", content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string contentResponse = await response.Content.ReadAsStringAsync();
+                        i = JsonConvert.DeserializeObject<int>(contentResponse);
+
+                        if (i > 0)
+                        {
+                            await InvokeAsync(async () =>
+                            {
+                                await GetUsers();
+                                SnackBar.Add("Done: Successfully Saved!", Severity.Success);
+                                StateHasChanged();
+                            });
+                        }
+                    }
+                    else
+                    {
+                        await InvokeAsync(() =>
+                        {
+                            SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
     }
 
     public void OnValidSubmit(EditContext context)
@@ -150,7 +268,29 @@
         }
     }
 
-    private async Task Search(){
-
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(txtsearch))
+        {
+            GetUsers();
+            return;
+        }
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+            HttpResponseMessage response = await client.GetAsync($"api/User/SearchUser?s={txtsearch}");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentrespose = await response.Content.ReadAsStringAsync();
+                u = JsonConvert.DeserializeObject<users[]>(contentrespose);
+                StateHasChanged();
+            }
+            else
+            {
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+            }
+        }
     }
 }

@@ -167,5 +167,47 @@ namespace Pos.Services
             }
             return 0;
         }
+
+        public async Task<List<users>> SearchUser(string search)
+        {
+            List<users> u = new List<users>();
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("SearchUser", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    com.Parameters.Clear();
+                    com.Parameters.AddWithValue("search", search);
+                    com.Parameters.AddWithValue("@searchWildcard", $"{search}%");
+                    var rdr = await com.ExecuteReaderAsync().ConfigureAwait(false);
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        u.Add(new users
+                        {
+                            userID = Convert.ToInt32(rdr["userID"]),
+                            name = rdr["name"].ToString(),
+                            username = rdr["username"].ToString(),
+                            password = rdr["password"].ToString(),
+                            role = rdr["role"].ToString()
+
+                        });
+                    }
+                    await rdr.CloseAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception here
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return u;
+        }
     }
 }
