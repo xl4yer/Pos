@@ -37,43 +37,43 @@
         {
             <div class="col-sm-4">
                 <MudCard Elevation="1">
-                <EditForm Model="@_p" OnValidSubmit="OnValidSubmit">
-                    <DataAnnotationsValidator />
-                    <MudContainer Style="max-height: 600px;">
-                        <div class="photo">
-                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
-                                <ActivatorContent>
-                                    <img src="@imgsrc" width="250" height="250" style="border: 1px solid gray; margin-top: 10px; border-radius: 5px;" />
-                                </ActivatorContent>
-                            </MudFileUpload>
-                        </div><br />
-                        <div>
-                            <p1>Product Code</p1>
-                            <MudTextField @bind-Value="@_p.code" Clearable For="@(() => _p.code)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div><br />
-                        <div>
-                            <p1>Product Name</p1>
-                            <MudTextField @bind-Value="@_p.name" Clearable For="@(() => _p.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div><br />
-                        <div>
-                            <p1>Product Price</p1>
-                            <MudTextField @bind-Value="@_p.price" Clearable For="@(() => _p.price)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </div>
-                    </MudContainer>
-                    <MudToolBar>
-                        <MudSpacer />
-                        <MudButton>Clear</MudButton>
-                        <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add Product</MudButton>
-                    </MudToolBar>
-                </EditForm>
+                    <EditForm Model="@_p" OnValidSubmit="OnValidSubmit">
+                        <DataAnnotationsValidator />
+                        <MudContainer Style="max-height: 600px;">
+                            <div class="photo">
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
+                                    <ActivatorContent>
+                                        <img src="@imgsrc" width="250" height="250" style="border: 1px solid gray; margin-top: 10px; border-radius: 5px;" />
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </div><br />
+                            <div>
+                                <p1>Product Code</p1>
+                                <MudTextField @bind-Value="@_p.code" Clearable For="@(() => _p.code)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div><br />
+                            <div>
+                                <p1>Product Name</p1>
+                                <MudTextField @bind-Value="@_p.name" Clearable For="@(() => _p.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div><br />
+                            <div>
+                                <p1>Product Price</p1>
+                                <MudTextField @bind-Value="@_p.price" Clearable For="@(() => _p.price)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div>
+                        </MudContainer>
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudButton @onclick="Clear">Clear</MudButton>
+                            <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add Product</MudButton>
+                        </MudToolBar>
+                    </EditForm>
                 </MudCard>
             </div>
             <div class="col-sm-8">
                 <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
                     <ToolBarContent>
-                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> 
-                            <MudSpacer/>
-                            <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> 
+                        <MudSpacer/>
+                        <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh Style="height: 50px;">Photo</MudTh>
@@ -138,7 +138,18 @@
     {
 
     }
- 
+  
+    async Task Clear()
+    {
+        _p.code = string.Empty;
+        _p.name = string.Empty;
+        _p.price = string.Empty;
+
+        //clear Uploaded Photo
+        var photos = GetImage(img64);
+        imgsrc = string.Format("data:image/jpg;base64,{0}", Convert.ToBase64String(photos));
+        StateHasChanged();
+    }
     protected override void OnInitialized()
     {
         if (img64 != null && img64.Length > 0)

@@ -1,4 +1,4 @@
-﻿@page "/counter"
+﻿@page "/counter2"
 @layout Components.Layout.LoginLayout
 @attribute [StreamRendering(true)]
 @rendermode InteractiveServer
@@ -378,67 +378,12 @@ else
     </div>
 }
 
-<!-- Print Dialog -->
-<MudDialog TitleClass="mud-primary" DisableSidePadding="true" @bind-Visible="_visible" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6" Style="color:white; font-weight: bold;">Billing</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudContainer Style="max-height: 500px; padding: 10px;">
-            <div style="text-align: center; font-family: monospace; font-size: 20px; line-height: 1.6;">
-
-                <!-- Total Bill Section -->
-                <div style="padding-bottom: 10px;">
-                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">Total Bill</h5>
-                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;"><u>@_total</u></h5>
-                </div>
-
-                <!-- Amount Section -->
-                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Amount</span>&nbsp;&nbsp;
-                    <MudNumericField T="double" Variant="Variant.Outlined" Margin="Margin.Dense" Value="_amount"
-                    ValueChanged="OnAmountChanged" Immediate="true"
-                    Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
-                </div>
-
-                <!-- Change Section -->
-                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Change</span>
-                    <span style="font-weight: bold;"><u>@_change</u></span>
-                </div>
-
-                <!-- Buttons Section -->
-                <div style="margin-top: 20px; padding-top: 10px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary"
-                        Style="font-family: monospace; font-size: 14px;">Cancel</MudButton>
-                        <MudButton Disabled="@_processing" OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary">
-                            @if (_processing)
-                            {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                <MudText Class="ms-2">Processing</MudText>
-                            }
-                            else
-                            {
-                                <MudText>Submit</MudText>
-                            }
-                        </MudButton>
-                    </div>
-                </div>
-            </div>
-        </MudContainer>
-    </DialogContent>
-</MudDialog>
 
 @code {
-    //Table Header & Footer
     bool fixed_header = true;
     bool fixed_footer = false;
-
     private products[] p;
     private temp[]? t;
-
-    //TextField Product Code
     private MudTextField<string>? inputElement;
     [Parameter]
     public products _prod { get; set; } = new products();
@@ -450,49 +395,16 @@ else
     public double _total { get; set; } = 0;
     private int _value { get; set; }
 
-    //Print Dialog
-    private bool _visible;
-    private readonly DialogOptions _dialogOptions = new();
-    private void Print() => _visible = true;
-
-    //Print Dialog Properties
-    [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; }
-    private bool _processing = false;
-    public double _amount { get; set; } = 0;
-    public double _change { get; set; } = 0;
-    private InstalledPrinter MyPrinter { get; set; } = new();
-    private bool UseDefaultPrinter = true;
-    private string name = "";
-
-    private async Task Submit()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _processing = true;
-        DoPrint();
-        await Task.Delay(5000);
-        await TempToPurchase();
-        await GetTemp();
-        await GetTotal();
-        _visible = false;
-        StateHasChanged();
-    }
-
-    private void OnAmountChanged(double value)
-    {
-        _amount = value;
-
-        if (_amount > 0)
+        if (firstRender)
         {
-            _change = _amount - _total;
-        }
-        else
-        {
-            _change = 0;
-        }
-
-        if (_change < 0)
-        {
-            _change = 0;
+            await GetTemp();
+            await GetProducts();
+            await GetTotal();
+            await JS.InvokeVoidAsync("document.activeElement.blur");
+            await Clear();
+            await inputElement.FocusAsync();
         }
     }
 
@@ -509,146 +421,6 @@ else
                 StateHasChanged();
             }
         }
-    }
-
-    private async Task TempToPurchase()
-    {
-        try
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", await Loc.GetItemAsStringAsync("token"));
-                HttpResponseMessage response = await client.PostAsync("api/Temp/TempToPurchase", null);
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseContent = await response.Content.ReadAsStringAsync();
-                    int i = JsonConvert.DeserializeObject<int>(responseContent);
-                    if (i > 0)
-                    {
-                        StateHasChanged();
-                    }
-                }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                    StateHasChanged();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
-        }
-    }
-
-    private async Task Cancel()
-    {
-        _visible = false;
-    }
-   
-
-    private string AbbreviateName(string name)
-    {
-        if (name.Length > 12)
-        {
-            var words = name.Split(' ');
-            if (words.Length > 1)
-            {
-                string abbreviatedName = words[0];
-                var secondWord = words[1];
-                string shortenedSecondWord = new string(secondWord.Where(c => "aeiouAEIOU".IndexOf(c) == -1).Take(4).ToArray());
-                abbreviatedName += " " + shortenedSecondWord;
-                return abbreviatedName.Length > 12 ? abbreviatedName.Substring(0, 12) : abbreviatedName;
-            }
-            else
-            {
-                return name.Substring(0, 12);
-            }
-        }
-        return name;
-    }
-
-    private async void DoPrint()
-    {
-        if (JSPrintManager.Status == JSPMWSStatus.Open)
-        {
-            var cpj = new ClientPrintJob();
-            cpj.ClientPrinter = UseDefaultPrinter ? new DefaultPrinter() : MyPrinter;
-
-            char esc = (char)0x1B;
-            char newLine = (char)0x0A;
-            string cmds = esc + "@";
-
-            cmds += esc + "!" + (char)0x01;
-
-            cmds += "DURIAN GARDEN" + newLine;
-            cmds += "Brgy. Sulit P.S.C." + newLine;
-            cmds += "09852254675" + newLine;
-            cmds += "Product     Qty  Price  Subtotal" + newLine;
-            cmds += "--------------------------------" + newLine;
-
-            await GetTemp();
-            if (t != null)
-            {
-                foreach (var temp in t)
-                {
-                    string abbreviatedName = AbbreviateName(temp.name);
-                    cmds += $"{abbreviatedName,-12} {temp.quantity,3} {temp.price,7:F2} {temp.total,7:F2}" + newLine;
-                }
-                cmds += "--------------------------------" + newLine;
-                cmds += $"Total: {_total,7:F2}" + newLine;
-            }
-
-            cmds += newLine + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + newLine;
-            cmds += $"Cashier:{name}" + newLine;
-
-            cpj.PrinterCommands = cmds;
-
-            JSPrintManager.SendClientPrintJob(cpj);
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            name = await Loc.GetItemAsStringAsync("name");
-            await GetTemp();
-            await GetProducts();
-            await GetTotal();
-            await JS.InvokeVoidAsync("document.activeElement.blur");
-            await Clear();
-            await inputElement.FocusAsync();
-
-            JSPrintManager.OnGetPrinters += () =>
-           {
-               if (JSPrintManager.Printers != null &&
-                   JSPrintManager.Printers.Length > 0)
-               {
-                   StateHasChanged();
-               }
-               else
-               {
-                   Console.WriteLine("No printers found...");
-               }
-           };
-
-            JSPrintManager.OnStatusChanged += () =>
-            {
-                StateHasChanged();
-
-                if (JSPrintManager.Status == JSPMWSStatus.Open)
-                {
-                    JSPrintManager.TryGetPrinters();
-                }
-            };
-
-            JSPrintManager.Start();
-        }
-        base.OnAfterRender(firstRender);
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs args)
@@ -689,28 +461,27 @@ else
 
                     if (i > 0)
                     {
+                        StateHasChanged();
                         await GetTemp();
                         await GetTotal();
                         await JS.InvokeVoidAsync("document.activeElement.blur");
                         await Clear();
                         await inputElement.FocusAsync();
-                        StateHasChanged();
                     }
                 }
                 else
                 {
+                    StateHasChanged();
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                     await JS.InvokeVoidAsync("document.activeElement.blur");
                     await Clear();
                     await inputElement.FocusAsync();
-                    StateHasChanged();
                 }
             }
         }
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
         }
     }
 
@@ -754,22 +525,20 @@ else
 
                     if (i > 0)
                     {
+                        StateHasChanged();
                         await GetTemp();
                         await GetTotal();
-                        StateHasChanged();
                     }
                 }
                 else
                 {
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                    StateHasChanged();
                 }
             }
         }
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
         }
     }
 
@@ -808,14 +577,12 @@ else
                 else
                 {
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                    StateHasChanged();
                 }
             }
         }
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
         }
     }
 
@@ -853,14 +620,12 @@ else
                 else
                 {
                     SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                    StateHasChanged();
                 }
             }
         }
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
         }
     }
 
@@ -884,7 +649,6 @@ else
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
         }
     }
 
@@ -896,7 +660,6 @@ else
         await Loc.GetItemAsStringAsync("token"));
         var p = await httpClient.GetFromJsonAsync<List<products>>($"api/Product/SProduct?s={value}");
         return p;
-        StateHasChanged();
     }
 
     private async void loadMore()
@@ -929,7 +692,6 @@ else
             else
             {
                 SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                StateHasChanged();
             }
         }
     }
@@ -954,8 +716,13 @@ else
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
         }
+    }
+
+    private async Task Print()
+    {
+        var parameters = new DialogParameters();
+        var dialog = await Dialog.Show<Print>("Total Bill", parameters).Result;
     }
 }
 

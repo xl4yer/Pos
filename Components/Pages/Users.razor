@@ -50,7 +50,7 @@
                         </MudContainer>
                         <MudToolBar>
                             <MudSpacer />
-                            <MudButton>Clear</MudButton>
+                            <MudButton @onclick="Clear">Clear</MudButton>
                             <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add User</MudButton>
                         </MudToolBar>
                     </EditForm>
@@ -129,6 +129,14 @@
             PasswordInputIcon = Icons.Material.Filled.Visibility;
             PasswordInput = InputType.Text;
         }
+    }
+
+    void Clear()
+    {
+        _u.name = string.Empty;
+        _u.username = string.Empty;
+        _u.password = string.Empty;
+        _u.role = string.Empty;
     }
 
     void Click()
