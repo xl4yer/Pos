@@ -141,6 +141,7 @@
                         await InvokeAsync(() =>
                         {
                             SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                            StateHasChanged();
                         });
                     }
                 }
@@ -148,6 +149,7 @@
             catch (Exception ex)
             {
                 SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+                StateHasChanged();
             }
         }
     }

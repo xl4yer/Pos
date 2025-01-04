@@ -43,7 +43,7 @@
                             <div>
                                 <p1>Role</p1>
                                 <MudSelect @bind-Value="_u.role" For="@(() => _u.role)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@("Admin")" />
+                                    <MudSelectItem Value="@("Administrator")" />
                                     <MudSelectItem Value="@("Cashier")" />
                                 </MudSelect>
                             </div>
@@ -170,6 +170,7 @@
     private async Task Refresh()
     {
         await GetUsers();
+        StateHasChanged();
     }
 
     private async Task Submit()
@@ -224,6 +225,7 @@
                         await InvokeAsync(() =>
                         {
                             SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                            StateHasChanged();
                         });
                     }
                 }
@@ -231,6 +233,7 @@
             catch (Exception ex)
             {
                 SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+                StateHasChanged();
             }
         }
     }
@@ -269,6 +272,7 @@
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
         }
     }
 
@@ -294,6 +298,7 @@
             else
             {
                 SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                StateHasChanged();
             }
         }
     }

@@ -138,7 +138,7 @@
     {
 
     }
-  
+
     async Task Clear()
     {
         _p.code = string.Empty;
@@ -207,11 +207,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-       
+
         if (firstRender)
         {
             role = await Loc.GetItemAsStringAsync("role");
             await GetProducts();
+            StateHasChanged();
         }
     }
 
@@ -235,6 +236,7 @@
         catch (Exception ex)
         {
             SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
         }
     }
 
@@ -288,6 +290,7 @@
                         await InvokeAsync(() =>
                         {
                             SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                            StateHasChanged();
                         });
                     }
                 }
@@ -295,6 +298,7 @@
             catch (Exception ex)
             {
                 SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+                StateHasChanged();
             }
         }
     }
@@ -329,6 +333,7 @@
             else
             {
                 SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                StateHasChanged();
             }
         }
     }

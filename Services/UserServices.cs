@@ -2,11 +2,13 @@
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
 using Pos.Class;
+using Pos.Components.Pages;
 using Pos.Models;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Windows.System;
 
 namespace Pos.Services
 {
@@ -24,52 +26,76 @@ namespace Pos.Services
         }
         public async Task<List<users>> UserLogin(string username, string password)
         {
-            List<users> u = new();
+            List<users> xuser = new List<users>();
+
             using (var con = new MySqlConnection(_constring.GetConnection()))
             {
                 await con.OpenAsync().ConfigureAwait(false);
-                var com = new MySqlCommand("Userlogin", con)
+
+                var com = new MySqlCommand("UserLogin", con)
                 {
                     CommandType = CommandType.StoredProcedure,
                 };
-                com.Parameters.Clear();
+
                 com.Parameters.AddWithValue("_username", username);
                 com.Parameters.AddWithValue("_password", password);
 
-                var rdr = await com.ExecuteReaderAsync().ConfigureAwait(false);
-                while (await rdr.ReadAsync().ConfigureAwait(false))
+                using (var rdr = await com.ExecuteReaderAsync().ConfigureAwait(false))
                 {
-                    u.Add(new users
+                    if (await rdr.ReadAsync().ConfigureAwait(false))
                     {
-                        userID = Convert.ToInt32(rdr["userID"]),
-                        name = rdr["Name"].ToString(),
-                        username = rdr["Username"].ToString(),
-                        password = rdr["Password"].ToString(),
-                        role = rdr["Role"].ToString(),
-                    });
-                }
-                if (u.Count > 0)
-                {
-                    var tokenHandler = new JwtSecurityTokenHandler();
-                    var key = Encoding.ASCII.GetBytes(_appSetting.Secret);
-                    var tokenDescriptor = new SecurityTokenDescriptor
-                    {
-                        Subject = new ClaimsIdentity(new Claim[]
+                        var user = new users
                         {
-                    new Claim (ClaimTypes.Name ,username),
-                    new Claim (JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
-                        }),
-                        Expires = DateTime.UtcNow.AddDays(1),
-                        SigningCredentials = new SigningCredentials(new
-                        SymmetricSecurityKey(key), SecurityAlgorithms.Aes128CbcHmacSha256)
+                            userID = Convert.ToInt32(rdr["userID"]),
+                            name = rdr["Name"].ToString(),
+                            username = rdr["Username"].ToString(),
+                            password = rdr["Password"].ToString(),
+                            role = rdr["Role"].ToString(),
+                        };
 
-                    };
-                    var token = tokenHandler.CreateToken(tokenDescriptor);
-                    u[0].token = tokenHandler.WriteToken(token);
+                        var token = GenerateJwtToken(user.username, user.role);
+                        user.token = token;
+
+                        xuser.Add(user);
+                    }
+                    else
+                    {
+                        xuser.Add(new users
+                        {
+                            userID = 0,
+                            role = null,
+                            name = null,
+                            username = null,
+                            password = null
+                        });
+                    }
                 }
-                return u;
             }
+
+            return xuser;
         }
+
+        private string GenerateJwtToken(string username, string role)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_appSetting.Secret);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Role, role),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        }),
+                Expires = DateTime.UtcNow.AddDays(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.Aes128CbcHmacSha256)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
 
         public async Task<List<users>> GetUsers()
         {

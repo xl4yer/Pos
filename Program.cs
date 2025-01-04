@@ -1,14 +1,17 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 using MudBlazor;
 using MudBlazor.Services;
 using Neodynamic.Blazor;
+using Pos;
 using Pos.Class;
 using Pos.Components;
 using Pos.Hubs;
 using Pos.Services;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,10 +26,13 @@ builder.Services.AddTransient<AppDb>();
 builder.Services.AddTransient<UserServices>();
 builder.Services.AddTransient<ProductServices>();
 builder.Services.AddTransient<TempServices>();
+builder.Services.AddTransient<PurchaseServices>();
 builder.Services.AddSingleton<INativePages, NativePages>();
 builder.Services.AddScoped<MudThemeProvider>();
 builder.Services.AddJSPrintManager();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddAuthorization();
+builder.Services.AddAuthentication();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddMudServices();
 builder.Services.AddSignalR();
@@ -51,6 +57,16 @@ builder.Services.Configure<AppSettings>(appSettingsSection);
 
 var appSettings = appSettingsSection.Get<AppSettings>();
 var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+
+builder.Services.AddAuthorization(options => {
+    options.AddPolicy("Administrator", policy => {
+        policy.RequireClaim(ClaimTypes.Role, "Administrator");
+
+    });
+    options.AddPolicy("Cashier", policy => {
+        policy.RequireClaim(ClaimTypes.Role, "Cashier");
+    });
+});
 
 builder.Services.AddAuthentication(options =>
 {

@@ -1,4 +1,9 @@
 ﻿@page "/dashboard"
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject ILocalStorageService Loc
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -8,10 +13,10 @@
         <MudCard Class="dashboard-card" Style="background-color:#30BFC1">
             <MudCardContent>
                 <MudText Class="dashboard-title" Size="5">
-                    Total purchase for today
+                    Today's Sales
                 </MudText>
                 <MudCardContent>
-                    <MudText Class="dashboard-count">₱11</MudText>
+                    <MudText Style="font-size:30px; font-weight:bold">₱@todaySales</MudText>
                 </MudCardContent>
             </MudCardContent>
         </MudCard>
@@ -21,10 +26,10 @@
         <MudCard Class="dashboard-card" Style="background-color:#FEAD46">
             <MudCardContent>
                 <MudText Class="dashboard-title" Size="5">
-                    Total purchase for this month
+                    Monthly Sales
                 </MudText>
                 <MudCardContent>
-                    <MudText Class="dashboard-count">₱ 22</MudText>
+                    <MudText Style="font-size:30px; font-weight:bold">₱@monthSales</MudText>
                 </MudCardContent>
             </MudCardContent>
         </MudCard>
@@ -35,15 +40,95 @@
 <div>
     <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="600px" ChartOptions="@Options" />
 </div>
+
+
 @code {
     private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
     public ChartOptions Options = new ChartOptions();
+    public double todaySales { get; set; } = 0;
+    public double monthSales { get; set; } = 0;
+    public double monthlySales { get; set; } = 0;
+    private purchase[]? p;
+    public string role { get; set; } = "";
 
-    public List<ChartSeries> Series = new List<ChartSeries>()
+    public List<ChartSeries> Series = new List<ChartSeries>();
+    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+    public async Task GetTodaySales()
     {
-        new ChartSeries() { Name = "Fossil", Data = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 } },
-        new ChartSeries() { Name = "Renewable", Data = new double[] { 10, 41, 35, 51, 49, 62, 69, 91, 148 } },
-    };
-    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage response = await client.GetAsync($"api/Purchase/GetTodaySales");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentResponse = await response.Content.ReadAsStringAsync();
+                todaySales = JsonConvert.DeserializeObject<double>(contentResponse);
+                StateHasChanged();
+            }
+        }
+    }
 
+    public async Task GetMonthlySales()
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage response = await client.GetAsync($"api/Purchase/GetMonthlySales");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentResponse = await response.Content.ReadAsStringAsync();
+                var salesData = JsonConvert.DeserializeObject<purchase[]>(contentResponse);
+
+                // Loop through the response data and assign total_sales to the Series data
+                var monthlySales = salesData.Select(x => x.total_sales).ToArray();
+                Series = new List<ChartSeries>
+            {
+                new ChartSeries
+                {
+                    Name = "Monthly Sales",
+                    Data = monthlySales
+                }
+            };
+
+                StateHasChanged(); // To refresh the UI
+            }
+        }
+    }
+
+    public async Task GetMonthSales()
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage response = await client.GetAsync($"api/Purchase/GetMonthSales");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentResponse = await response.Content.ReadAsStringAsync();
+                monthSales = JsonConvert.DeserializeObject<double>(contentResponse);
+                StateHasChanged();
+            }
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            role = await Loc.GetItemAsStringAsync("role");
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+       
+        if (role == "Cashier")
+        {
+            Nav.NavigateTo("/counter");
+        }
+
+        await GetTodaySales();
+        await GetMonthSales();
+        await GetMonthlySales();
+        StateHasChanged();
+    }
 }
