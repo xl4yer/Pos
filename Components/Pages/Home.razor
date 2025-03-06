@@ -1,0 +1,253 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using Pos.Models
+@inject NavigationManager Nav
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime IJS
+@layout Components.Layout.LoginLayout
+
+<PageTitle>Login</PageTitle>
+
+<style>
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Quicksand", sans-serif;
+    }
+
+    body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #111;
+    width: 100%;
+    overflow: hidden;
+    background-image: url('bg.jpg');
+    background-size:cover;
+    background-repeat:no-repeat;
+    }
+
+    .ring {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    }
+
+    .ring i {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #fff;
+    transition: 0.5s;
+    }
+
+    .ring i:nth-child(1) {
+    border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+    animation: animate 6s linear infinite;
+    }
+
+    .ring i:nth-child(2) {
+    border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%;
+    animation: animate 4s linear infinite;
+    }
+
+    .ring i:nth-child(3) {
+    border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%;
+    animation: animate2 10s linear infinite;
+    }
+
+    .ring:hover i {
+    border: 6px solid var(--clr);
+    filter: drop-shadow(0 0 20px var(--clr));
+    }
+
+    @@keyframes animate {
+    0% {
+    transform: rotate(0deg);
+    }
+
+    100% {
+    transform: rotate(360deg);
+    }
+    }
+
+    @@keyframes animate2 {
+    0% {
+    transform: rotate(360deg);
+    }
+
+    100% {
+    transform: rotate(0deg);
+    }
+    }
+
+    .login {
+    position: absolute;
+    width: 300px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+    }
+
+    .login h2 {
+    font-size: 2em;
+    color: #fff;
+    }
+
+    .login .inputBx {
+    position: relative;
+    width: 100%;
+    }
+
+    .login .inputBx input {
+    position: relative;
+    width: 100%;
+    padding: 12px 20px;
+    background: transparent;
+    border: 2px solid #fff;
+    border-radius: 40px;
+    font-size: 1.2em;
+    color: #fff;
+    box-shadow: none;
+    outline: none;
+    }
+
+    .login .inputBx input[type="submit"] {
+    width: 100%;
+    background: #0078ff;
+    background: linear-gradient(45deg, #ff357a, #fff172);
+    border: none;
+    cursor: pointer;
+    }
+
+    .login .inputBx input::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+    }
+
+    .login .links {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    }
+
+    .login .links a {
+    color: #fff;
+    text-decoration: none;
+    }
+</style>
+
+<div class="ring">
+    <i style="--clr:#00ff0a;"></i>
+    <i style="--clr:#ff0057;"></i>
+    <i style="--clr:#fffd44;"></i>
+
+    <div class="login">
+        <h4 style="color:white">DURIAN GARDEN (POS)</h4>
+
+        <!-- Username Input -->
+        <div class="inputBx">
+            <input type="text" placeholder="Username" @bind-value="username">
+        </div>
+
+        <!-- Password Input -->
+        <div class="inputBx">
+            <input type="password" placeholder="Password" @bind-value="password">
+        </div>
+
+        <!-- Sign In Button -->
+        <div class="inputBx">
+            <input type="submit" value="Sign in" @onclick="UserLogin">
+        </div>
+
+        <!-- Display Login Error Message if Login Fails -->
+        @if (loginError)
+        {
+            <div style="color: red; text-align: center;">Invalid Username or Password. Please try again.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private string username = "";
+    private string password = "";
+    private List<users> u;
+    private bool loginError = false; // To track login errors
+
+    private async Task UserLogin()
+    {
+        u = new List<users>();
+        loginError = false; // Reset error flag before attempting login
+
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                HttpResponseMessage json = await client.GetAsync($"api/User/UserLogin?username={username}&password={password}");
+
+                if (json.IsSuccessStatusCode)
+                {
+                    string content = await json.Content.ReadAsStringAsync();
+                    List<users> code = JsonConvert.DeserializeObject<List<users>>(content);
+
+                    if (code != null && code.Count > 0)
+                    {
+                        // Store the user's info and token
+                        var user = code[0];
+                        u.Add(new users()
+                            {
+                                userID = user.userID,
+                                token = user.token,
+                                name = user.name,
+                                username = user.username,
+                                role = user.role
+                            });
+
+                        // Save user data to local storage
+                        await Loc.SetItemAsync("token", u[0].token);
+                        await Loc.SetItemAsync("role", u[0].role);
+                        await Loc.SetItemAsync("name", u[0].name);
+
+                        // Navigate based on user role
+                        switch (u[0].role.ToLower())
+                        {
+                            case "cashier":
+                                Nav.NavigateTo("/counter");
+                                break;
+                            case "admin":
+                                Nav.NavigateTo("/dashboard");
+                                break;
+                            default:
+                                loginError = true; // Unknown role
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        loginError = true; // Invalid credentials
+                    }
+                }
+                else
+                {
+                    loginError = true; // API call failed
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            loginError = true;
+            Console.WriteLine($"Login error: {ex.Message}");
+        }
+    }
+
+}

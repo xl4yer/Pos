@@ -1,0 +1,959 @@
+﻿@page "/counter"
+@layout Components.Layout.LoginLayout
+@attribute [StreamRendering(true)]
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject ILocalStorageService Loc
+@using System.Net.Http.Headers
+@inject JSPrintManager JSPrintManager
+@inject IJSRuntime JS
+@inject ISnackbar SnackBar
+@inject IDialogService Dialog
+@using Microsoft.AspNetCore.SignalR.Client
+
+<PageTitle>Counter</PageTitle>
+
+<style>
+    @@media (max-width: 767px) {
+        .container .row {
+            --bs-gutter-x: 1rem;
+            --bs-gutter-y: 1rem;
+        }
+
+            .container .row > .col {
+                flex: 0 0 auto;
+                width: 100%;
+            }
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+    .card-img-top {
+        height: 180px;
+        object-fit: cover;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .card-body {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .card-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .card-subtitle {
+        font-size: 12px;
+        color: #777;
+    }
+
+    .price {
+        font-size: 14px;
+        font-weight: bold;
+        color: #e74c3c;
+    }
+
+    .chip {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 12px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+        .table th, .table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        .table td {
+            background-color: #fff;
+            color: #555;
+        }
+
+    .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .mt-5 {
+        margin-top: 2rem;
+    }
+
+    .mt-3 {
+        margin-top: 1rem;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .loader-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .card-body {
+            padding: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 14px;
+        }
+
+        .price {
+            font-size: 12px;
+        }
+    }
+
+    img {
+        width: 35px;
+        border-radius: 50px;
+        float: left;
+    }
+
+    .logout {
+        font-size: .8em;
+        font-family: 'Oswald', sans-serif;
+        position: relative;
+        right: -18px;
+        bottom: -10px;
+        overflow: hidden;
+        letter-spacing: 3px;
+        opacity: 0;
+        transition: opacity .45s;
+        -webkit-transition: opacity .35s;
+        color: white;
+    }
+
+    .button {
+        text-decoration: none;
+        float: right;
+        padding: 12px;
+        margin: 15px;
+        color: white;
+        width: 50px;
+        transition: width .35s;
+        -webkit-transition: width .35s;
+        overflow: hidden;
+    }
+
+    a:hover {
+        width: 130px;
+    }
+
+        a:hover .logout {
+            opacity: .9;
+        }
+
+    a {
+        text-decoration: none;
+    }
+
+
+    @@media (max-width: 600px) {
+        img {
+            width: 25px;
+        }
+
+        .button {
+            padding: 8px;
+            margin: 10px;
+            width: 40px;
+        }
+
+        a:hover {
+            width: 100px;
+        }
+
+        .logout {
+            font-size: .7em;
+            right: -12px;
+            bottom: -8px;
+        }
+    }
+</style>
+
+<MudToolBar Style="border-bottom:solid gray 0.1px; background-color: #343A40; color:white">
+    <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="mr-5" />
+    <MudText Align="Align.Left"><b>DURIAN GARDEN (POS)</b></MudText>
+    &nbsp;&nbsp;
+    <MudTextField T="string" Clearable Style="color:white; font-family:'Segoe Script'" @bind-Value="txtsearch" TextChanged="Search"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?"
+                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+    <MudSpacer /><MudSpacer /><MudSpacer />
+    <div class="navigation">
+        <a class="button" href="/" @onclick="Logout">
+            <img src="cashier.png" />
+            <div class="logout" style="color:white">LOGOUT</div>
+        </a>
+    </div>
+</MudToolBar>
+
+@if (p == null || p.Length == 0)
+{
+    <div class="d-flex justify-content-center my-4" style="padding-top:300px;">
+        <div class="loader"></div>
+    </div>
+}
+else
+{
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6" style="max-height: 650px; overflow-y: scroll;">
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    @foreach (var product in p.Take(currentIndex))
+                    {
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="data:image/bmp;base64, @(Convert.ToBase64String(product.photo))" class="card-img-top" alt="@product.name" />
+                                <div class="card-body">
+                                    <h4 class="card-title">@product.name</h4>
+                                    <h5 class="card-subtitle">@product.code</h5>
+                                    <p class="price">₱@product.price</p>
+                                    @if (product.status == "Available")
+                                    {
+                                        <span class="chip" style="background-color: #2ecc71; color: white;">@product.status</span>
+                                        <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="product.qty" />
+                                        <MudFab StartIcon="@Icons.Material.Filled.AddShoppingCart" Label="Add to Cart" Size="Size.Small"
+                                                Color="Color.Primary" @onclick="(e => AddToCart(product.code, product.qty))"
+                                                style="font-size: 12px; margin-top: 10px;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="chip" style="background-color: #e74c3c; color: white;">@product.status</span>
+                                        <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled @bind-Value="product.qty" />
+                                        <MudFab StartIcon="@Icons.Material.Filled.AddShoppingCart" Label="Add to Cart" Size="Size.Small" Disabled
+                                                Color="Color.Primary" style="font-size: 12px; margin-top: 10px;" />
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (currentIndex < p.Length)
+                {
+                    <div class="text-center mt-3">
+                        <MudButton Disabled="@_loading" OnClick="@loadMore" Variant="Variant.Filled" Color="Color.Secondary">
+                            @if (_loading)
+                            {
+                                <div class="loader"></div>
+                            }
+                            else
+                            {
+                                <MudText>Load More</MudText>
+                            }
+                        </MudButton>
+                    </div>
+                }
+            </div>
+            <div class="col-md-6 mt-5">
+                <div class="container">
+                    <MudCard Elevation="0" Style="padding:15px; font-family:monospace;">
+                        <MudToolBar>
+                            <MudTextField @bind-Value="_temp.code" Style="font-family:'Segoe Script'; font-size: 16px;"
+                                          Placeholder="Input product code here" Margin="Margin.Dense" Variant="Variant.Outlined"
+                                          @onkeypress="HandleKeyPress" AutoFocus @ref="inputElement" />
+                        </MudToolBar>
+                        @if (t != null && t.Any())
+                        {
+                            <MudTable Class="ma-5" Dense="true" Elevation="0" Hover="true" Items="@t"
+                                      HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer"
+                                      Height="@(fixed_header || fixed_footer ? "370px" : "")">
+                                <ToolBarContent>
+                                    <MudToolBar>
+                                        <MudSpacer />
+                                        <MudIconButton Icon="@Icons.Material.Outlined.Print" @onclick="Print" Variant="Variant.Outlined" Color="Color.Success" />
+                                    </MudToolBar>
+                                </ToolBarContent>
+                                <HeaderContent>
+                                    <MudTh>Product</MudTh><MudTh>Price</MudTh><MudTh>Qty</MudTh><MudTh>SubTotal</MudTh><MudTh></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Product Name" Style="font-size: 14px;">@context.name</MudTd>
+                                    <MudTd DataLabel="Price" Style="font-size: 14px;">₱@context.price</MudTd>
+                                    <MudTd>
+                                        <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                         Style="width: 60px; height: 22px; font-size: 14px;"
+                                                         Value="@context.quantity"
+                                                         ValueChanged="@((_value) => UpdateQuantity(context.tempID, _value))"
+                                                         Immediate="true" />
+                                    </MudTd>
+                                    <MudTd DataLabel="Subtotal" Style="font-size: 14px;">₱@context.total</MudTd>
+                                    <MudTd>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled"
+                                                       Color="Color.Error" Size="Size.Small"
+                                                       Style="width:20px; height:20px;"
+                                                       @onclick="(e => DeleteTemp(context.tempID))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudText Align="Align.Center" Style="font-family:'Segoe Script'; font-size: 25px;">No Transactions Found</MudText>
+                        }
+                        @if (t != null && t.Any())
+                        {
+                            <MudToolBar Style="border: 1px solid black; border-radius:10px;">
+                                <h3>Total:</h3>
+                                <MudSpacer />
+                                <MudText Typo="Typo.h5" Align="Align.Right" Style="font-size: 20px; font-family: monospace;">
+                                    @if (t == null || t.Length == 0)
+                                    {
+                                        <h3>Total: <u>₱0</u></h3>
+                                    }
+                                    else
+                                    {
+                                        <h3><u>₱@_total</u></h3>
+                                    }
+                                </MudText>
+                            </MudToolBar>
+                        }
+                    </MudCard>
+                </div>
+                <div>
+                    @if (JSPrintManager.Status == JSPMWSStatus.Open)
+                    {
+                        <span class="badge badge-success"><i class="fa fa-check" /> Open</span>
+                    }
+                    else if (JSPrintManager.Status == JSPMWSStatus.Closed)
+                    {
+                        <span class="badge badge-danger"><i class="fa fa-exclamation-circle" /> Closed!</span>
+                        <div><strong>JSPrintManager (JSPM) App</strong> is not installed or not running! <a href="https://neodynamic.com/downloads/jspm" target="_blank">Download JSPM Client App...</a></div>
+                    }
+                </div>
+                @if (JSPrintManager.Status == JSPMWSStatus.Open && JSPrintManager.Printers == null)
+                {
+                    <div class="text-center mt-3">
+                        <div class="spinner-border text-info" role="status"><span class="sr-only">Please wait...</span></div>
+                        <strong><em>Getting local printers...</em></strong>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Print Dialog -->
+<MudDialog TitleClass="mud-primary" DisableSidePadding="true" @bind-Visible="_visible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Style="color:white; font-weight: bold;">Billing</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudContainer Style="max-height: 500px; padding: 10px;">
+            <div style="text-align: center; font-family: monospace; font-size: 20px; line-height: 1.6;">
+
+                <!-- Total Bill Section -->
+                <div style="padding-bottom: 10px;">
+                    <h5 style="margin: 0; font-size: 16px; font-weight: bold;">Total Bill</h5>
+                    <h5 style="margin: 0; font-size: 25px; font-weight: bold;"><u>@_total</u></h5>
+                </div>
+
+                <!-- Amount Section -->
+                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Amount</span>&nbsp;&nbsp;
+                    <MudNumericField T="double" Variant="Variant.Outlined" Margin="Margin.Dense" Value="_amount"
+                                     ValueChanged="OnAmountChanged" Immediate="true"
+                                     Style="width: 150px; font-family: monospace; font-size: 14px; text-align: right;" />
+                </div>
+
+                <!-- Change Section -->
+                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Change</span>
+                    <span style="font-weight: bold;"><u>@_change</u></span>
+                </div>
+
+                <!-- Buttons Section -->
+                <div style="margin-top: 20px; padding-top: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Secondary"
+                                   Style="font-family: monospace; font-size: 14px;">Cancel</MudButton>
+                        <MudButton Disabled="@_processing" OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary">
+                            @if (_processing)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Processing</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Submit</MudText>
+                            }
+                        </MudButton>
+                    </div>
+                </div>
+            </div>
+        </MudContainer>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    //Table Header & Footer
+    bool fixed_header = true;
+    bool fixed_footer = false;
+
+    private products[] p;
+    private temp[]? t;
+
+    //TextField Product Code
+    private MudTextField<string>? inputElement;
+    [Parameter]
+    public products _prod { get; set; } = new products();
+    public temp _temp { get; set; } = new temp();
+    private int currentIndex = 12;
+    private const int PageSize = 12;
+    private bool _loading = false;
+    private string txtsearch { get; set; } = string.Empty;
+    public double _total { get; set; } = 0;
+    private int _value { get; set; }
+
+    //Print Dialog
+    private bool _visible;
+    private readonly DialogOptions _dialogOptions = new();
+    private void Print() => _visible = true;
+
+    //Print Dialog Properties
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+    private bool _processing = false;
+    public double _amount { get; set; } = 0;
+    public double _change { get; set; } = 0;
+    private InstalledPrinter MyPrinter { get; set; } = new();
+    private bool UseDefaultPrinter = true;
+    private string name = "";
+
+    private async Task Submit()
+    {
+        _processing = true;
+        DoPrint();
+        await Task.Delay(5000);
+        await TempToPurchase();
+        await GetTemp();
+        await GetTotal();
+        _visible = false;
+        _processing = false;
+        StateHasChanged();
+    }
+
+    private void OnAmountChanged(double value)
+    {
+        _amount = value;
+
+        if (_amount > 0)
+        {
+            _change = _amount - _total;
+        }
+        else
+        {
+            _change = 0;
+        }
+
+        if (_change < 0)
+        {
+            _change = 0;
+        }
+    }
+
+    private async Task GetTotal()
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage response = await client.GetAsync($"api/Temp/Total");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentResponse = await response.Content.ReadAsStringAsync();
+                _total = JsonConvert.DeserializeObject<double>(contentResponse);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task TempToPurchase()
+    {
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", await Loc.GetItemAsStringAsync("token"));
+                HttpResponseMessage response = await client.PostAsync("api/Temp/TempToPurchase", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int i = JsonConvert.DeserializeObject<int>(responseContent);
+                    if (i > 0)
+                    {
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    private async Task Cancel()
+    {
+        _visible = false;
+    }
+
+
+    private string AbbreviateName(string name)
+    {
+        if (name.Length > 12)
+        {
+            var words = name.Split(' ');
+            if (words.Length > 1)
+            {
+                string abbreviatedName = words[0];
+                var secondWord = words[1];
+                string shortenedSecondWord = new string(secondWord.Where(c => "aeiouAEIOU".IndexOf(c) == -1).Take(4).ToArray());
+                abbreviatedName += " " + shortenedSecondWord;
+                return abbreviatedName.Length > 12 ? abbreviatedName.Substring(0, 12) : abbreviatedName;
+            }
+            else
+            {
+                return name.Substring(0, 12);
+            }
+        }
+        return name;
+    }
+
+    private async void DoPrint()
+    {
+        if (JSPrintManager.Status == JSPMWSStatus.Open)
+        {
+            var cpj = new ClientPrintJob();
+            cpj.ClientPrinter = UseDefaultPrinter ? new DefaultPrinter() : MyPrinter;
+
+            char esc = (char)0x1B;
+            char newLine = (char)0x0A;
+            string cmds = esc + "@";
+
+            cmds += esc + "!" + (char)0x01;
+
+            cmds += "DURIAN GARDEN" + newLine;
+            cmds += "Brgy. Sulit P.S.C." + newLine;
+            cmds += "09852254675" + newLine;
+            cmds += "Product     Qty  Price  Subtotal" + newLine;
+            cmds += "--------------------------------" + newLine;
+
+            await GetTemp();
+            if (t != null)
+            {
+                foreach (var temp in t)
+                {
+                    string abbreviatedName = AbbreviateName(temp.name);
+                    cmds += $"{abbreviatedName,-12} {temp.quantity,3} {temp.price,7:F2} {temp.total,7:F2}" + newLine;
+                }
+                cmds += "--------------------------------" + newLine;
+                cmds += $"Total: {_total,7:F2}" + newLine;
+            }
+
+            cmds += newLine + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + newLine;
+            cmds += $"Cashier:{name}" + newLine;
+
+            cpj.PrinterCommands = cmds;
+
+            JSPrintManager.SendClientPrintJob(cpj);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            name = await Loc.GetItemAsStringAsync("name");
+            await GetTemp();
+            await GetProducts();
+            await GetTotal();
+            await JS.InvokeVoidAsync("document.activeElement.blur");
+            await Clear();
+            await inputElement.FocusAsync();
+
+            JSPrintManager.OnGetPrinters += () =>
+           {
+               if (JSPrintManager.Printers != null &&
+                   JSPrintManager.Printers.Length > 0)
+               {
+                   StateHasChanged();
+               }
+               else
+               {
+                   Console.WriteLine("No printers found...");
+               }
+           };
+
+            JSPrintManager.OnStatusChanged += () =>
+            {
+                StateHasChanged();
+
+                if (JSPrintManager.Status == JSPMWSStatus.Open)
+                {
+                    JSPrintManager.TryGetPrinters();
+                }
+            };
+
+            JSPrintManager.Start();
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs args)
+    {
+        string clipboardText = await JS.InvokeAsync<string>("navigator.clipboard.readText");
+        string result = clipboardText.Trim();
+        if (args.Key == "Enter")
+        {
+            await AddToCartBarCode();
+        }
+    }
+
+    private async Task AddToCartBarCode()
+    {
+        try
+        {
+            var _t = new temp
+                {
+                    code = _temp.code,
+                    date = DateTime.Now,
+                    quantity = 1
+                };
+
+            using (HttpClient client2 = new HttpClient())
+            {
+                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var jsonBody = JsonConvert.SerializeObject(_t);
+                HttpContent requestBody = new StringContent(jsonBody);
+                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+                HttpResponseMessage response = await client2.PostAsync("api/Temp/AddTemp", requestBody);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int i = JsonConvert.DeserializeObject<int>(responseContent);
+
+                    if (i > 0)
+                    {
+                        await GetTemp();
+                        await GetTotal();
+                        await JS.InvokeVoidAsync("document.activeElement.blur");
+                        await Clear();
+                        await inputElement.FocusAsync();
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    await JS.InvokeVoidAsync("document.activeElement.blur");
+                    await Clear();
+                    await inputElement.FocusAsync();
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    private async Task Clear()
+    {
+        _temp.code = null;
+    }
+
+    private async Task Logout()
+    {
+        await Loc.RemoveItemAsync("name");
+        await Loc.RemoveItemAsync("token");
+        Nav.NavigateTo("/");
+    }
+
+    private async Task AddToCart(string code, int qty)
+    {
+        try
+        {
+            var _t = new temp
+                {
+                    code = code,
+                    quantity = qty,
+                    date = DateTime.Now
+                };
+
+            using (HttpClient client2 = new HttpClient())
+            {
+                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var jsonBody = JsonConvert.SerializeObject(_t);
+                HttpContent requestBody = new StringContent(jsonBody);
+                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+                HttpResponseMessage response = await client2.PostAsync("api/Temp/AddTemp", requestBody);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int i = JsonConvert.DeserializeObject<int>(responseContent);
+
+                    if (i > 0)
+                    {
+                        await GetTemp();
+                        await GetTotal();
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateQuantity(int tempID, int quantity)
+    {
+        try
+        {
+            var _t = new temp
+                {
+                    tempID = tempID,
+                    quantity = quantity
+                };
+
+            using (HttpClient client2 = new HttpClient())
+            {
+                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var jsonBody = JsonConvert.SerializeObject(_t);
+                HttpContent requestBody = new StringContent(jsonBody);
+                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+                HttpResponseMessage response = await client2.PutAsync("api/Temp/UpdateTemp", requestBody);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int i = JsonConvert.DeserializeObject<int>(responseContent);
+
+                    if (i > 0)
+                    {
+                        await GetTemp();
+                        await GetTotal();
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteTemp(int _tempID)
+    {
+        try
+        {
+            var _t = new temp
+                {
+                    tempID = _tempID
+                };
+
+            using (HttpClient client2 = new HttpClient())
+            {
+                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var jsonBody = JsonConvert.SerializeObject(_t);
+                HttpContent requestBody = new StringContent(jsonBody);
+                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+                HttpResponseMessage response = await client2.PostAsync("api/Temp/DeleteTemp", requestBody);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    int i = JsonConvert.DeserializeObject<int>(responseContent);
+
+                    if (i > 0)
+                    {
+                        await GetTemp();
+                        await GetTotal();
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetProducts()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var response = await client.GetAsync($"api/Product/GetProducts");
+                if (response.IsSuccessStatusCode)
+                {
+                    var contentResponse = await response.Content.ReadAsStringAsync();
+                    p = JsonConvert.DeserializeObject<products[]>(contentResponse);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    private async Task<IEnumerable<products>> GetProduct(string value, CancellationToken token)
+    {
+        HttpClient httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri($"{Nav.BaseUri}");
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+        await Loc.GetItemAsStringAsync("token"));
+        var p = await httpClient.GetFromJsonAsync<List<products>>($"api/Product/SProduct?s={value}");
+        return p;
+        StateHasChanged();
+    }
+
+    private async void loadMore()
+    {
+        _loading = true;
+        await Task.Delay(1000);
+        currentIndex = Math.Min(currentIndex + PageSize, p.Length);
+        StateHasChanged();
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(txtsearch))
+        {
+            GetProducts();
+            return;
+        }
+        using (HttpClient client = new HttpClient())
+        {
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                    await Loc.GetItemAsStringAsync("token"));
+            HttpResponseMessage response = await client.GetAsync($"api/Product/SearchProduct?s={txtsearch}");
+            if (response.IsSuccessStatusCode)
+            {
+                string contentrespose = await response.Content.ReadAsStringAsync();
+                p = JsonConvert.DeserializeObject<products[]>(contentrespose);
+                StateHasChanged();
+            }
+            else
+            {
+                SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task GetTemp()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var response = await client.GetAsync($"api/Temp/GetTemp");
+                if (response.IsSuccessStatusCode)
+                {
+                    var contentResponse = await response.Content.ReadAsStringAsync();
+                    t = JsonConvert.DeserializeObject<temp[]>(contentResponse);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,78 @@
+﻿@page "/dashboard"
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject ILocalStorageService Loc
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Net.Http.Json
+
+<PageTitle>Dashboard</PageTitle>
+<div class="row">
+    <div class="col-12 col-md-6">
+        <MudCard Class="dashboard-card" Style="background-color:#30BFC1">
+            <MudCardContent>
+                <MudText Class="dashboard-title" Size="5">Today's Sales</MudText>
+                <MudText Style="font-size:30px; font-weight:bold">₱@todaySales</MudText>
+            </MudCardContent>
+        </MudCard>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <MudCard Class="dashboard-card" Style="background-color:#FEAD46">
+            <MudCardContent>
+                <MudText Class="dashboard-title" Size="5">Monthly Sales</MudText>
+                <MudText Style="font-size:30px; font-weight:bold">₱@monthSales</MudText>
+            </MudCardContent>
+        </MudCard>
+    </div>
+</div>
+
+<br />
+
+<MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index"
+XAxisLabels="@XAxisLabels" Width="100%" Height="600px" ChartOptions="@Options" />
+
+@code {
+    public ChartOptions Options = new();
+    public double todaySales { get; set; }
+    public double monthSales { get; set; }
+    private int Index = -1;
+    public List<ChartSeries> Series { get; set; } = new();
+    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+    private async Task<T?> GetSalesData<T>(string endpoint)
+    {
+        try
+        {
+            var response = await Http.GetAsync(new Uri($"{Nav.BaseUri}api/Purchase/{endpoint}"));
+            response.EnsureSuccessStatusCode(); // Throws if not 2xx status
+            return await response.Content.ReadFromJsonAsync<T>();
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Error fetching {endpoint}: {ex.Message}");
+            return default; // Return null or default value
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        todaySales = (await GetSalesData<double?>("GetTodaySales")) ?? 0;
+        monthSales = (await GetSalesData<double?>("GetMonthSales")) ?? 0;
+        var salesData = await GetSalesData<purchase[]>("GetMonthlySales");
+
+        if (salesData is not null)
+        {
+            Series = new()
+            {
+                new ChartSeries
+                {
+                    Name = "Monthly Sales",
+                    Data = salesData.Select(x => x.total_sales).ToArray()
+                }
+            };
+        }
+    }
+
+    private class purchase { public double total_sales { get; set; } }
+}

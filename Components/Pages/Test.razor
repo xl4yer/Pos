@@ -1,0 +1,18 @@
+﻿@page "/test"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ILocalStorageService Loc
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using System.Net.Http.Headers
+@inject ISnackbar SnackBar
+@using Microsoft.AspNetCore.Authorization;
+
+<AuthorizeView Policy="Admin">
+    <Authorized>
+        <p>Welcome Admin!</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>You do not have access to this section.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
