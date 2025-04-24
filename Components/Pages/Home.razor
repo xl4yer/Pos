@@ -166,7 +166,7 @@
 
         <!-- Sign In Button -->
         <div class="inputBx">
-            <input type="submit" value="Sign in" @onclick="UserLogin">
+            <input type="submit" value="Sign in" @onclick="Login">
         </div>
 
         <!-- Display Login Error Message if Login Fails -->
@@ -182,72 +182,49 @@
     private string password = "";
     private List<users> u;
     private bool loginError = false; // To track login errors
+    [Parameter] public string ADMIN { get; set; } = "";
 
-    private async Task UserLogin()
+    public async Task Login()
     {
         u = new List<users>();
-        loginError = false; // Reset error flag before attempting login
-
-        try
+        using (HttpClient client = new HttpClient())
         {
-            using (HttpClient client = new HttpClient())
+            client.BaseAddress = new Uri($"{Nav.BaseUri}");
+            HttpResponseMessage json = await client.GetAsync($"api/User/UserLogin?username={username}&password={password}");
+            if (json.IsSuccessStatusCode)
             {
-                client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                HttpResponseMessage json = await client.GetAsync($"api/User/UserLogin?username={username}&password={password}");
+                string content = await json.Content.ReadAsStringAsync();
+                List<users> code = JsonConvert.DeserializeObject<List<users>>(content);
 
-                if (json.IsSuccessStatusCode)
-                {
-                    string content = await json.Content.ReadAsStringAsync();
-                    List<users> code = JsonConvert.DeserializeObject<List<users>>(content);
-
-                    if (code != null && code.Count > 0)
+                u.Add(new users()
                     {
-                        // Store the user's info and token
-                        var user = code[0];
-                        u.Add(new users()
-                            {
-                                userID = user.userID,
-                                token = user.token,
-                                name = user.name,
-                                username = user.username,
-                                role = user.role
-                            });
+                        userID = code[0].userID,
+                        token = code[0].token,
+                        name = code[0].name,
+                        role = code[0].role,
+                    });
 
-                        // Save user data to local storage
-                        await Loc.SetItemAsync("token", u[0].token);
-                        await Loc.SetItemAsync("role", u[0].role);
-                        await Loc.SetItemAsync("name", u[0].name);
-
-                        // Navigate based on user role
-                        switch (u[0].role.ToLower())
-                        {
-                            case "cashier":
-                                Nav.NavigateTo("/counter");
-                                break;
-                            case "admin":
-                                Nav.NavigateTo("/dashboard");
-                                break;
-                            default:
-                                loginError = true; // Unknown role
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        loginError = true; // Invalid credentials
-                    }
-                }
-                else
-                {
-                    loginError = true; // API call failed
-                }
+                ADMIN = code[0].name;
             }
         }
-        catch (Exception ex)
+        if (u[0].token != null)
+        {
+            await Loc.SetItemAsStringAsync("role", u[0].role);
+            await Loc.SetItemAsStringAsync("token", u[0].token);
+            if (u[0].role == "Admin")
+            {
+                Nav.NavigateTo("/dashboard");
+            }
+            else
+            {
+                Nav.NavigateTo("/counter");
+            }
+        }
+        else
         {
             loginError = true;
-            Console.WriteLine($"Login error: {ex.Message}");
         }
     }
+
 
 }

@@ -118,7 +118,6 @@
     </div>
 
 
-
 @code {
     private products[]? p;
     [Parameter] public products _p { get; set; } = new products();
@@ -135,7 +134,7 @@
     [Parameter] public byte[] _photo { get; set; } = null;
     IList<IBrowserFile> files = new List<IBrowserFile>();
     public bool def { get; set; }
-    public string role = "";
+    private string role { get; set; } = string.Empty;
 
     public void OnValidSubmit(EditContext context)
     {

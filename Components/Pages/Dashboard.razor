@@ -7,30 +7,30 @@
 @using System.Net.Http.Json
 
 <PageTitle>Dashboard</PageTitle>
-<div class="row">
-    <div class="col-12 col-md-6">
-        <MudCard Class="dashboard-card" Style="background-color:#30BFC1">
-            <MudCardContent>
-                <MudText Class="dashboard-title" Size="5">Today's Sales</MudText>
-                <MudText Style="font-size:30px; font-weight:bold">₱@todaySales</MudText>
-            </MudCardContent>
-        </MudCard>
+
+    <div class="row">
+        <div class="col-12 col-md-6">
+            <MudCard Class="dashboard-card" Style="background-color:#30BFC1">
+                <MudCardContent>
+                    <MudText Class="dashboard-title" Size="5">Today's Sales</MudText>
+                    <MudText Style="font-size:30px; font-weight:bold">₱@todaySales</MudText>
+                </MudCardContent>
+            </MudCard>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <MudCard Class="dashboard-card" Style="background-color:#FEAD46">
+                <MudCardContent>
+                    <MudText Class="dashboard-title" Size="5">Monthly Sales</MudText>
+                    <MudText Style="font-size:30px; font-weight:bold">₱@monthSales</MudText>
+                </MudCardContent>
+            </MudCard>
+        </div>
     </div>
+    <br />
+    <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index"
+              XAxisLabels="@XAxisLabels" Width="100%" Height="600px" ChartOptions="@Options" />
 
-    <div class="col-12 col-md-6">
-        <MudCard Class="dashboard-card" Style="background-color:#FEAD46">
-            <MudCardContent>
-                <MudText Class="dashboard-title" Size="5">Monthly Sales</MudText>
-                <MudText Style="font-size:30px; font-weight:bold">₱@monthSales</MudText>
-            </MudCardContent>
-        </MudCard>
-    </div>
-</div>
-
-<br />
-
-<MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index"
-XAxisLabels="@XAxisLabels" Width="100%" Height="600px" ChartOptions="@Options" />
 
 @code {
     public ChartOptions Options = new();
@@ -39,6 +39,16 @@ XAxisLabels="@XAxisLabels" Width="100%" Height="600px" ChartOptions="@Options" /
     private int Index = -1;
     public List<ChartSeries> Series { get; set; } = new();
     public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+    private string role { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            role = await Loc.GetItemAsStringAsync("role");
+            StateHasChanged();
+        }
+    }
 
     private async Task<T?> GetSalesData<T>(string endpoint)
     {

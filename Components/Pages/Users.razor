@@ -9,12 +9,13 @@
 
 <PageTitle>Users</PageTitle>
 
+
     <style type="text/css">
         .centered {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
         }
     </style>
 
@@ -102,6 +103,8 @@
     </div>
 }
 
+  
+
 @code
 {
     private users[]? u;
@@ -113,9 +116,9 @@
     private bool hide = false;
     bool isShow;
     bool showPass;
-    private string? role;
     InputType PasswordInput = InputType.Password;
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private string role { get; set; } = string.Empty;
 
     void ShowPassword()
     {
