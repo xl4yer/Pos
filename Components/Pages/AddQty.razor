@@ -9,25 +9,15 @@
 <EditForm Model="@p" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator />
     <MudDialog TitleClass="mud-primary" DisableSidePadding="true">
-        <TitleContent><MudText Typo="Typo.h6" Style="color:white">Update Product</MudText></TitleContent>
+        <TitleContent><MudText Typo="Typo.h6" Style="color:white">Add Quantity</MudText></TitleContent>
         <DialogContent>
             <MudContainer Style="max-height: 500px; overflow-y: scroll">
-                <div class="photo">
-                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
-                        <ActivatorContent><img src="@imgsrc" width="250" height="250" style="border: 1px solid gray; margin-top: 10px; border-radius: 5px;" /></ActivatorContent>
-                    </MudFileUpload>
-                </div><br />
-                <p1>Product Code</p1>
-                <MudTextField Clearable @bind-Value="p.code" For="@(() => p.code)" T="string" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <p1>Product ID</p1>
+                <MudTextField Disabled @bind-Value="p.code" For="@(() => p.code)" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Product Name</p1>
-                <MudTextField Clearable @bind-Value="p.name" For="@(() => p.name)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <p1>Product Price</p1>
-                <MudTextField Clearable @bind-Value="p.price" For="@(() => p.price)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <p1>Product Status</p1>
-                <MudSelect @bind-Value="p.status" For="@(() => p.status)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("Available")" />
-                    <MudSelectItem Value="@("Unavailable")" />
-                </MudSelect>
+                <MudTextField Disabled @bind-Value="p.name" For="@(() => p.name)" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <p1>Add Quantity</p1>
+                <MudTextField Clearable @bind-Value="qty" For="@(() => qty)" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
             </MudContainer>
         </DialogContent>
         <DialogActions>
@@ -52,70 +42,25 @@
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
     [Parameter] public products p { get; set; } = new products();
     private bool _processing = false;
-    [Parameter] public Img64 img { get; set; } = new();
-    [Parameter] public string imgsrc { get; set; } = "";
-    [Parameter] public byte[] _filebytes { get; set; } = null;
-    [Parameter] public byte[] _photo { get; set; } = null;
+    private int qty { get; set; }
 
     public void OnValidSubmit(EditContext context)
     {
 
     }
 
-    protected override void OnInitialized()
-    {
-        if (p.photo != null && p.photo.Length > 0)
-        {
-            imgsrc = $"data:image/png;base64,{Convert.ToBase64String(p.photo)}";
-        }
-    }
-
-    IList<IBrowserFile> files = new List<IBrowserFile>();
-    public bool def { get; set; }
-    private async void UploadFiles(IBrowserFile file)
-    {
-        def = true;
-        files.Add(file);
-        var memoryStream = new MemoryStream();
-        await file.OpenReadStream(file.Size).CopyToAsync(memoryStream);
-        _filebytes = memoryStream.ToArray();
-        _photo = GetImage(Convert.ToBase64String(_filebytes));
-        imgsrc = string.Format("data:image/jpg;base64,{0}", Convert.ToBase64String(_photo));
-        StateHasChanged();
-    }
-
-   private async Task clearImg()
-    {
-        var photos = GetImage(img.img64);
-
-        imgsrc = string.Format("data:image/jpg;base64,{0}", Convert.ToBase64String(photos));
-        StateHasChanged();
-
-    }
-
-    public byte[] GetImage(string sBase64String)
-    {
-        byte[] bytes = null;
-        if (!string.IsNullOrEmpty(sBase64String))
-        {
-            bytes = Convert.FromBase64String(sBase64String);
-        }
-        return bytes;
-
-    }
 
     private async Task Cancel()
     {
         MudDialog.Cancel();
     }
 
+   
     private async Task Submit()
     {
-        if (string.IsNullOrEmpty(p.code) &&
-            string.IsNullOrEmpty(p.name) &&
-            string.IsNullOrEmpty(p.price))
+        if (qty == 0)
         {
-            SnackBar.Add("Fill The Required Fields!", Severity.Warning);
+            SnackBar.Add("Please Add Valid Quantity", Severity.Warning);
         }
         else
         {
@@ -124,13 +69,13 @@
             {
                 var _p = new products
                     {
-                        productID = p.productID, 
-                        photo = _photo ?? p.photo,
+                        productID = p.productID,
+                        photo = p.photo,
                         code = p.code,
                         name = p.name,
                         price = p.price,
                         status = p.status,
-                        quantity = p.quantity
+                        quantity = p.quantity + qty
                     };
 
                 using (HttpClient client = new HttpClient())
@@ -145,7 +90,7 @@
 
                     HttpResponseMessage response = await client.PutAsync("api/Product/UpdateProduct", content);
 
-                    if(response.IsSuccessStatusCode)
+                    if (response.IsSuccessStatusCode)
                     {
                         string contentresponse = await response.Content.ReadAsStringAsync();
                         i = JsonConvert.DeserializeObject<int>(contentresponse);
@@ -161,7 +106,7 @@
                             StateHasChanged();
                         }
                     }
-                else
+                    else
                     {
                         await InvokeAsync(() =>
                         {

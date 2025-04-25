@@ -39,7 +39,8 @@ namespace Pos.Services
                             name = rdr["name"].ToString(),
                             code = rdr["code"].ToString(),
                             price = rdr["price"].ToString(),
-                            status = rdr["status"].ToString()
+                            status = rdr["status"].ToString(),
+                            quantity = Convert.ToInt32(rdr["qty"])
                         });
                     }
                     await rdr.CloseAsync().ConfigureAwait(false);
@@ -101,6 +102,7 @@ namespace Pos.Services
                     com.Parameters.AddWithValue("_name", p.name);
                     com.Parameters.AddWithValue("_price", p.price);
                     com.Parameters.AddWithValue("_status", p.status);
+                    com.Parameters.AddWithValue("_qty", p.quantity);
                     return await com.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }
                 catch (Exception ex)
