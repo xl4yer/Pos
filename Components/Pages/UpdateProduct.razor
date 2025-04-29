@@ -23,11 +23,6 @@
                 <MudTextField Clearable @bind-Value="p.name" For="@(() => p.name)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Product Price</p1>
                 <MudTextField Clearable @bind-Value="p.price" For="@(() => p.price)" T="string" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <p1>Product Status</p1>
-                <MudSelect @bind-Value="p.status" For="@(() => p.status)" Margin="Margin.Dense" T="string" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("Available")" />
-                    <MudSelectItem Value="@("Unavailable")" />
-                </MudSelect>
             </MudContainer>
         </DialogContent>
         <DialogActions>
@@ -128,9 +123,7 @@
                         photo = _photo ?? p.photo,
                         code = p.code,
                         name = p.name,
-                        price = p.price,
-                        status = p.status,
-                        quantity = p.quantity
+                        price = p.price
                     };
 
                 using (HttpClient client = new HttpClient())

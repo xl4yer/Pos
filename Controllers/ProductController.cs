@@ -7,7 +7,6 @@ using Pos.Services;
 
 namespace Pos.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class ProductController : Controller
@@ -21,7 +20,6 @@ namespace Pos.Controllers
 
        
         [HttpGet]
-        //[Authorize(Policy = "AdminCashier")]
         public async Task<List<products>> GetProducts()
         {
             var ret = await xservices.GetProducts();
