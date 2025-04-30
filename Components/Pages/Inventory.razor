@@ -1,0 +1,95 @@
+﻿@page "/inventory"
+@attribute [StreamRendering(true)]
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject ILocalStorageService Loc
+@using System.Net.Http.Headers
+@inject ISnackbar SnackBar
+@inject IDialogService Dialog
+
+<style type="text/css">
+    .centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    }
+</style>
+
+<div class="container mt-5">
+    @if (q == null || q.Length == 0)
+    {
+        <div class="centered">
+            <div class="loader"></div>
+        </div>
+    }
+    else
+    {
+        <MudTable Class="ma-5" Dense="true" Hover="true" Items="@q" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
+            <ToolBarContent>
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> &nbsp; &nbsp;                        <MudSpacer />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Product Code</MudTh>
+                <MudTh>Product Name</MudTh>
+                <MudTh>Qty</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.date</MudTd>
+                <MudTd>@context.code</MudTd>
+                <MudTd>@context.name</MudTd>
+                <MudTd>@context.qty</MudTd>
+
+            </RowTemplate>
+        </MudTable>
+
+    }
+</div>
+
+
+
+@code {
+    private Qty[]? q;
+    bool fixed_header = true;
+    bool fixed_footer = false;
+
+    private async Task Refresh()
+    {
+        await GetQty();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await GetQty();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetQty()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri($"{Nav.BaseUri}");
+                var response = await client.GetAsync($"api/Qty/GetQty");
+                if (response.IsSuccessStatusCode)
+                {
+                    await Task.Delay(1000);
+                    var contentResponse = await response.Content.ReadAsStringAsync();
+                    q = JsonConvert.DeserializeObject<Qty[]>(contentResponse);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+            StateHasChanged();
+        }
+    }
+}

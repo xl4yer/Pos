@@ -74,7 +74,8 @@
                     <ToolBarContent>
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" />
                         <MudSpacer />
-                        <MudTextField @bind-Value="txtsearch" Clearable TextChanged="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="txtsearch" Clearable AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" /> &nbsp;
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" @onclick="Search" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Medium" />
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh Style="height: 50px;">Photo</MudTh>
@@ -243,6 +244,7 @@
 
                 if (response.IsSuccessStatusCode)
                 {
+                    await Task.Delay(1000);
                     string contentResponse = await response.Content.ReadAsStringAsync();
                     p = JsonConvert.DeserializeObject<products[]>(contentResponse);
                 }
@@ -336,11 +338,6 @@
 
     private async Task Search()
     {
-        if (string.IsNullOrWhiteSpace(txtsearch))
-        {
-            GetProducts();
-            return;
-        }
         using (HttpClient client = new HttpClient())
         {
             client.BaseAddress = new Uri($"{Nav.BaseUri}");

@@ -135,12 +135,12 @@ namespace Pos.Services
                         p.Add(new products
                         {
                             productID = Convert.ToInt32(rdr["productID"]),
-                            code = rdr["code"].ToString(),
                             photo = (byte[])rdr["photo"],
                             name = rdr["name"].ToString(),
+                            code = rdr["code"].ToString(),
                             price = rdr["price"].ToString(),
-                            status = rdr["status"].ToString()
-
+                            status = rdr["status"].ToString(),
+                            quantity = Convert.ToInt32(rdr["qty"])
                         });
                     }
                     await rdr.CloseAsync().ConfigureAwait(false);

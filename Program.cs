@@ -27,6 +27,7 @@ builder.Services.AddTransient<UserServices>();
 builder.Services.AddTransient<ProductServices>();
 builder.Services.AddTransient<TempServices>();
 builder.Services.AddTransient<PurchaseServices>();
+builder.Services.AddTransient<QtyServices>();
 builder.Services.AddSingleton<INativePages, NativePages>();
 builder.Services.AddScoped<MudThemeProvider>();
 builder.Services.AddJSPrintManager();

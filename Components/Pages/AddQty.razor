@@ -67,28 +67,24 @@
             int i = 0;
             try
             {
-                var _p = new products
+                var _q = new Qty
                     {
-                        productID = p.productID,
-                        photo = p.photo,
+                        date = DateTime.Now,
                         code = p.code,
-                        name = p.name,
-                        price = p.price,
-                        status = p.status,
-                        quantity = p.quantity + qty
+                        qty = qty,
                     };
 
                 using (HttpClient client = new HttpClient())
                 {
                     client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                    var json = JsonConvert.SerializeObject(_p);
+                    var json = JsonConvert.SerializeObject(_q);
                     HttpContent content = new StringContent(json);
                     content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
                     client.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", await Loc.GetItemAsStringAsync("token"));
 
-                    HttpResponseMessage response = await client.PutAsync("api/Product/UpdateProduct", content);
+                    HttpResponseMessage response = await client.PostAsync("api/Qty/AddQty", content);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -101,7 +97,7 @@
                                 await InvokeAsync(StateHasChanged);
                             });
 
-                            SnackBar.Add($"Done: Successfully Updated!", Severity.Success);
+                            SnackBar.Add($"Done: Successfully Added!", Severity.Success);
                             MudDialog.Cancel();
                             StateHasChanged();
                         }

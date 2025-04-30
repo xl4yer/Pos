@@ -254,6 +254,7 @@ else
                                     <h4 class="card-title">@product.name</h4>
                                     <h5 class="card-subtitle">@product.code</h5>
                                     <p class="price">₱@product.price</p>
+                                    <p class="card-subtitle">Available:@product.quantity</p>
                                     @if (product.status == "Available")
                                     {
                                         <span class="chip" style="background-color: #2ecc71; color: white;">@product.status</span>
