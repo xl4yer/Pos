@@ -34,7 +34,70 @@
 
 <div class="container mt-5">
     <div class="row">
-        @if (p != null && p.Any())
+        @if (p == null)
+        {
+            <div class="centered">
+                <div class="loader"></div>
+            </div>
+        }
+        else if (p.Length == 0)
+        {
+            <div class="col-sm-4">
+                <MudCard Elevation="1">
+                    <EditForm Model="@_p" OnValidSubmit="OnValidSubmit">
+                        <DataAnnotationsValidator />
+                        <MudContainer Style="max-height: 600px;">
+                            <div class="photo">
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".png,.jpg,.jpeg">
+                                    <ActivatorContent>
+                                        <img src="@imgsrc" width="250" height="250" style="border: 1px solid gray; margin-top: 10px; border-radius: 5px;" />
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </div><br />
+                            <div>
+                                <p1>Product Code</p1>
+                                <MudTextField @bind-Value="@_p.code" Clearable For="@(() => _p.code)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div><br />
+                            <div>
+                                <p1>Product Name</p1>
+                                <MudTextField @bind-Value="@_p.name" Clearable For="@(() => _p.name)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div><br />
+                            <div>
+                                <p1>Product Price</p1>
+                                <MudTextField @bind-Value="@_p.price" Clearable For="@(() => _p.price)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </div>
+                        </MudContainer>
+                        <MudToolBar>
+                            <MudSpacer />
+                            <MudButton @onclick="Clear">Clear</MudButton>
+                            <MudButton Variant="Variant.Filled" @onclick="Submit" Color="Color.Primary">Add Product</MudButton>
+                        </MudToolBar>
+                    </EditForm>
+                </MudCard>
+            </div>
+            <div class="col-sm-8">
+                <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
+                    <ToolBarContent>
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" />
+                        <MudSpacer />
+                        <MudTextField @bind-Value="txtsearch" Clearable AdornmentColor="Color.Tertiary" Placeholder="What are you looking for?" Variant="Variant.Outlined" Margin="Margin.Dense" /> &nbsp;
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" @onclick="Search" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Medium" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh Style="height: 50px;">Photo</MudTh>
+                        <MudTh>Product Name</MudTh>
+                        <MudTh>Price</MudTh>
+                        <MudTh>Qty</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                      <h1>No Records Found</h1>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        }
+        else
         {
             <div class="col-sm-4">
                 <MudCard Elevation="1">
@@ -91,7 +154,8 @@
                         </MudTd>
                         <MudTd DataLabel="Name">@context.name</MudTd>
                         <MudTd DataLabel="Price">@context.price</MudTd>
-                        <MudTd DataLabel="Available Qty">@context.quantity
+                        <MudTd DataLabel="Available Qty">
+                            @context.quantity
                             <MudIconButton Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small" @onclick="(e => AddQuantity(context.productID))" />
                         </MudTd>
                         <MudTd DataLabel="Status">
@@ -112,15 +176,10 @@
                 </MudTable>
             </div>
         }
-        else
-        {
-            <div class="d-flex justify-content-center my-4 centered">
-                <div class="loader"></div>
-            </div>
-        }
     </div>
 </div>
-
+           
+       
 
 @code {
     [Parameter] public string imgsrc { get; set; } = "";
