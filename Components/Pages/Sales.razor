@@ -30,7 +30,11 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> &nbsp; &nbsp;                        <MudSpacer />
             </ToolBarContent>
             <HeaderContent>
-                <MudTh>Date</MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<purchase, object>(c => c.date)" InitialDirection="SortDirection.Descending">
+                        Date
+                    </MudTableSortLabel>
+                </MudTh>
                 <MudTh>Product Code</MudTh>
                 <MudTh>Product Name</MudTh>
                 <MudTh>Price</MudTh>

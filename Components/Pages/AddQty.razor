@@ -17,7 +17,7 @@
                 <p1>Product Name</p1>
                 <MudTextField Disabled @bind-Value="p.name" For="@(() => p.name)" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <p1>Add Quantity</p1>
-                <MudTextField Clearable @bind-Value="qty" For="@(() => qty)" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField @bind-Value="qty" For="@(() => qty)" AutoFocus Variant="Variant.Outlined" Margin="Margin.Dense" />
             </MudContainer>
         </DialogContent>
         <DialogActions>
