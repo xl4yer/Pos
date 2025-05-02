@@ -6,6 +6,15 @@
 @using System.Net.Http.Headers
 @inject ISnackbar SnackBar
 @inject IDialogService Dialog
+@using DocumentFormat.OpenXml
+@using DocumentFormat.OpenXml.Packaging
+@using DocumentFormat.OpenXml.Spreadsheet
+@inject IJSRuntime IJS
+
+<PageTitle>Inventory Report</PageTitle>
+<HeadContent>
+    <script type="text/javascript" src="js/download.js"></script>
+</HeadContent>
 
 <style type="text/css">
     .centered {
@@ -27,7 +36,9 @@
     {
         <MudTable Class="ma-5" Dense="true" Hover="true" Items="@q" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
             <ToolBarContent>
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" /> &nbsp; &nbsp;                        <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" Size="Size.Small"/>
+                <MudSpacer />
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Success" @onclick="ExportToExcel">Export to Excel</MudButton>
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>
@@ -71,6 +82,66 @@
             await GetQty();
             StateHasChanged();
         }
+    }
+
+    private async Task ExportToExcel()
+    {
+        if (q == null || q.Length == 0)
+            return;
+
+        using MemoryStream ms = new MemoryStream();
+        using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook))
+        {
+            WorkbookPart workbookPart = spreadsheetDocument.AddWorkbookPart();
+            workbookPart.Workbook = new Workbook();
+
+            WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            var sheetData = new SheetData();
+            worksheetPart.Worksheet = new Worksheet(sheetData);
+
+            // Add header row
+            Row headerRow = new Row();
+            string[] headers = { "Date", "Product Code", "Product Name","Qty"};
+            foreach (var header in headers)
+            {
+                headerRow.Append(new Cell
+                    {
+                        DataType = CellValues.String,
+                        CellValue = new CellValue(header)
+                    });
+            }
+            sheetData.Append(headerRow);
+
+            // Add data rows
+            foreach (var product in q)
+            {
+                Row dataRow = new Row();
+
+                dataRow.Append(
+                    new Cell { DataType = CellValues.String, CellValue = new CellValue(product.date.ToString("yyyy-MM-dd")) },
+                    new Cell { DataType = CellValues.String, CellValue = new CellValue(product.code) },
+                    new Cell { DataType = CellValues.String, CellValue = new CellValue(product.name) },
+                    new Cell { DataType = CellValues.Number, CellValue = new CellValue(product.qty.ToString()) }
+                );
+
+                sheetData.Append(dataRow);
+            }
+
+            Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+            Sheet sheet = new Sheet()
+                {
+                    Id = workbookPart.GetIdOfPart(worksheetPart),
+                    SheetId = 1,
+                    Name = "InventoryReport"
+                };
+            sheets.Append(sheet);
+
+            workbookPart.Workbook.Save();
+        }
+
+        // Export file to browser
+        var base64 = Convert.ToBase64String(ms.ToArray());
+        await IJS.InvokeVoidAsync("downloadFile", "InventoryReport.xlsx", base64);
     }
 
     private async Task GetQty()
