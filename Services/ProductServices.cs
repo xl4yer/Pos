@@ -71,6 +71,7 @@ namespace Pos.Services
                     com.Parameters.AddWithValue("_name", p.name);
                     com.Parameters.AddWithValue("_code", p.code);
                     com.Parameters.AddWithValue("_price", p.price);
+                    com.Parameters.AddWithValue("_qty", p.quantity);
                     return await com.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }
                 catch (Exception ex)

@@ -340,7 +340,8 @@
                         photo = _photo,
                         code = _p.code,
                         name = _p.name,
-                        price = _p.price
+                        price = _p.price,
+                        quantity = 0
                     };
 
                 using (HttpClient client = new HttpClient())
@@ -365,6 +366,7 @@
                             await InvokeAsync(async () =>
                             {
                                 SnackBar.Add("Done: Successfully Saved!", Severity.Success);
+                                await Clear();
                                 StateHasChanged();
                             });
                         }

@@ -12,9 +12,6 @@
 @inject IJSRuntime IJS
 
 <PageTitle>Inventory Report</PageTitle>
-<HeadContent>
-    <script type="text/javascript" src="js/download.js"></script>
-</HeadContent>
 
 <style type="text/css">
     .centered {
@@ -86,9 +83,6 @@
 
     private async Task ExportToExcel()
     {
-        if (q == null || q.Length == 0)
-            return;
-
         using MemoryStream ms = new MemoryStream();
         using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook))
         {

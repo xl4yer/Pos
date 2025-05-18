@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Mysqlx.Crud;
 using Pos.Models;
 using Pos.Services;
@@ -12,10 +13,12 @@ namespace Pos.Controllers
     public class ProductController : Controller
     {
         ProductServices xservices;
+        IHubContext<Hub> _hub;
 
-        public ProductController(ProductServices xservices)
+        public ProductController(ProductServices xservices, IHubContext<Hub> hubContext)
         {
             this.xservices = xservices;
+            _hub = hubContext;
         }
 
        

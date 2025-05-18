@@ -624,6 +624,7 @@ else
             await JS.InvokeVoidAsync("document.activeElement.blur");
             await Clear();
             await inputElement.FocusAsync();
+            StateHasChanged();
 
             JSPrintManager.OnGetPrinters += () =>
            {
@@ -665,56 +666,57 @@ else
 
     private async Task AddToCartBarCode()
     {
-        try
-        {
-            var _t = new temp
-                {
-                    code = _temp.code,
-                    date = DateTime.Now,
-                    quantity = 1
-                };
-
-            using (HttpClient client2 = new HttpClient())
+            try
             {
-                client2.BaseAddress = new Uri($"{Nav.BaseUri}");
-                var jsonBody = JsonConvert.SerializeObject(_t);
-                HttpContent requestBody = new StringContent(jsonBody);
-                requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
-                    await Loc.GetItemAsStringAsync("token"));
-                HttpResponseMessage response = await client2.PostAsync("api/Temp/AddTemp", requestBody);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseContent = await response.Content.ReadAsStringAsync();
-                    int i = JsonConvert.DeserializeObject<int>(responseContent);
-
-                    if (i > 0)
+                var _t = new temp
                     {
-                        await GetTemp();
-                        await GetTotal();
+                        code = _temp.code,
+                        date = DateTime.Now,
+                        quantity = 1
+                    };
+
+                using (HttpClient client2 = new HttpClient())
+                {
+                    client2.BaseAddress = new Uri($"{Nav.BaseUri}");
+                    var jsonBody = JsonConvert.SerializeObject(_t);
+                    HttpContent requestBody = new StringContent(jsonBody);
+                    requestBody.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                        await Loc.GetItemAsStringAsync("token"));
+                    HttpResponseMessage response = await client2.PostAsync("api/Temp/AddTemp", requestBody);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseContent = await response.Content.ReadAsStringAsync();
+                        int i = JsonConvert.DeserializeObject<int>(responseContent);
+
+                        if (i > 0)
+                        {
+                            await GetTemp();
+                            await GetTotal();
+                            await JS.InvokeVoidAsync("document.activeElement.blur");
+                            await Clear();
+                            await inputElement.FocusAsync();
+                            StateHasChanged();
+                        }
+                    }
+                    else
+                    {
+                        SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
                         await JS.InvokeVoidAsync("document.activeElement.blur");
                         await Clear();
                         await inputElement.FocusAsync();
                         StateHasChanged();
                     }
                 }
-                else
-                {
-                    SnackBar.Add($"Warning: {response.ReasonPhrase}", Severity.Warning);
-                    await JS.InvokeVoidAsync("document.activeElement.blur");
-                    await Clear();
-                    await inputElement.FocusAsync();
-                    StateHasChanged();
-                }
+            }
+            catch (Exception ex)
+            {
+                SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+                StateHasChanged();
             }
         }
-        catch (Exception ex)
-        {
-            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
-            StateHasChanged();
-        }
-    }
+
 
     private async Task Clear()
     {
@@ -866,8 +868,29 @@ else
         }
     }
 
+    protected HubConnection hubConnection;
+    protected async override Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/hub"))
+            .Build();
+
+        hubConnection.On("client", async () =>
+        {
+            await Task.Delay(2000);
+            await GetProducts();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+    }
+
     private async Task GetProducts()
     {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("SendClient");
+        }
         try
         {
             using (var client = new HttpClient())
