@@ -31,6 +31,8 @@
     }
     else
     {
+
+        <MudText Align="Align.Center" Typo="Typo.h5">Inventory Report</MudText>
         <MudTable Class="ma-5" Dense="true" Hover="true" Items="@q" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
             <ToolBarContent>
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" Size="Size.Small"/>

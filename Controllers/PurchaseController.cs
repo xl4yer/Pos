@@ -26,6 +26,20 @@ namespace Pos.Controllers
         }
 
         [HttpGet]
+        public async Task<List<purchase>> BestSelling()
+        {
+            var ret = await xservices.BestSelling();
+            return ret;
+        }
+
+        [HttpGet]
+        public async Task<List<purchase>> SalesByCashier()
+        {
+            var ret = await xservices.SalesByCashier();
+            return ret;
+        }
+
+        [HttpGet]
         public async Task<double> GetTodaySales()
         {
             return await xservices.GetTodaySales();

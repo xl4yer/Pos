@@ -465,6 +465,7 @@ else
     private InstalledPrinter MyPrinter { get; set; } = new();
     private bool UseDefaultPrinter = true;
     private string name = "";
+    private string userID = "";
 
     private async Task Submit()
     {
@@ -618,6 +619,7 @@ else
         if (firstRender)
         {
             name = await Loc.GetItemAsStringAsync("name");
+            userID = await Loc.GetItemAsStringAsync("userID");
             await GetTemp();
             await GetProducts();
             await GetTotal();
@@ -670,6 +672,7 @@ else
             {
                 var _t = new temp
                     {
+                        userID = userID,
                         code = _temp.code,
                         date = DateTime.Now,
                         quantity = 1
@@ -736,6 +739,7 @@ else
         {
             var _t = new temp
                 {
+                userID = userID,
                     code = code,
                     quantity = qty,
                     date = DateTime.Now
@@ -784,7 +788,8 @@ else
             var _t = new temp
                 {
                     tempID = tempID,
-                    quantity = quantity
+                    quantity = quantity,
+                userID = userID
                 };
 
             using (HttpClient client2 = new HttpClient())
@@ -829,7 +834,9 @@ else
         {
             var _t = new temp
                 {
-                    tempID = _tempID
+                    tempID = _tempID,
+                    userID = userID,
+                  
                 };
 
             using (HttpClient client2 = new HttpClient())

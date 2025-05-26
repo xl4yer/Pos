@@ -31,34 +31,76 @@
     }
     else
     {
-        <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
-            <ToolBarContent>
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" Size="Size.Small" /> &nbsp; &nbsp;                    
-                <MudSpacer />
-                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Success" Size="Size.Small" @onclick="ExportToExcel">Export to Excel</MudButton>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>
-                    <MudTableSortLabel SortBy="new Func<purchase, object>(c => c.date)" InitialDirection="SortDirection.Descending">
-                        Date
-                    </MudTableSortLabel>
-                </MudTh>
-                <MudTh>Product Code</MudTh>
-                <MudTh>Product Name</MudTh>
-                <MudTh>Price</MudTh>
-                <MudTh>Qty</MudTh>
-                <MudTh>Total</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.date</MudTd>
-                <MudTd>@context.code</MudTd>
-                <MudTd>@context.name</MudTd>
-                <MudTd>@context.price</MudTd>
-                <MudTd>@context.quantity</MudTd>
-                <MudTd>@context.total</MudTd>
 
-            </RowTemplate>
-        </MudTable>
+      
+                    <MudText Align="Align.Center" Typo="Typo.h5">Sales Report</MudText>
+                    <MudTable Class="ma-5" Dense="true" Hover="true" Items="@p" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
+                        <ToolBarContent>
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" @onclick="Refresh" Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" Size="Size.Small" /> &nbsp; &nbsp;
+                            <MudSpacer />
+                            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Success" Size="Size.Small" @onclick="ExportToExcel">Export to Excel</MudButton>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<purchase, object>(c => c.date)" InitialDirection="SortDirection.Descending">
+                                    Date
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>Product Code</MudTh>
+                            <MudTh>Product Name</MudTh>
+                            <MudTh>Price</MudTh>
+                            <MudTh>Qty</MudTh>
+                            <MudTh>Total</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.date</MudTd>
+                            <MudTd>@context.code</MudTd>
+                            <MudTd>@context.name</MudTd>
+                            <MudTd>@context.price</MudTd>
+                            <MudTd>@context.quantity</MudTd>
+                            <MudTd>@context.total</MudTd>
+
+                        </RowTemplate>
+                    </MudTable>
+
+                    <br>
+
+                    <div class="container mt-5">
+  <div class="row">
+    <div class="col-sm-6">
+         <MudText Align="Align.Center" Typo="Typo.h5">Best Selling Products</MudText>
+                    <MudTable Class="ma-5" Dense="true" Hover="true" Items="@_p" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
+                        <HeaderContent>
+                            <MudTh>Product Code</MudTh>
+                            <MudTh>Product Name</MudTh>
+
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.code</MudTd>
+                            <MudTd>@context.name</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+    </div>
+    <div class="col-sm-6">
+    
+                    <MudText Align="Align.Center" Typo="Typo.h5">Sales By Cashier</MudText>
+                    <MudTable Class="ma-5" Dense="true" Hover="true" Items="@salesByCashier" HorizontalScrollbar="true" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "455px" : "")">
+                        <HeaderContent>
+                            <MudTh>User ID</MudTh>
+                            <MudTh>Cashier Name</MudTh>
+                            <MudTh>Total Sales</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.userID</MudTd>
+                            <MudTd>@context.name</MudTd>
+                            <MudTd>@context.total</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+    </div>
+   
+  </div>
+</div>
+              
 
     }
 </div>
@@ -66,7 +108,9 @@
 
 
 @code {
+    private purchase[]? salesByCashier;
     private purchase[]? p;
+    private purchase[]? _p;
     List<purchase> PList = new List<purchase>();
     bool fixed_header = true;
     bool fixed_footer = false;
@@ -76,12 +120,19 @@
         await GetSales();
     }
 
+    private async Task ViewSales(int userID)
+    {
+        
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
 
         if (firstRender)
         {
             await GetSales();
+            await BestSelling();
+              await SalesByCashier();
             StateHasChanged();
         }
     }
@@ -107,10 +158,10 @@
             foreach (var header in headers)
             {
                 headerRow.Append(new Cell
-                    {
-                        DataType = CellValues.String,
-                        CellValue = new CellValue(header)
-                    });
+                {
+                    DataType = CellValues.String,
+                    CellValue = new CellValue(header)
+                });
             }
             sheetData.Append(headerRow);
 
@@ -133,11 +184,11 @@
 
             Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
             Sheet sheet = new Sheet()
-                {
-                    Id = workbookPart.GetIdOfPart(worksheetPart),
-                    SheetId = 1,
-                    Name = "SalesReport"
-                };
+            {
+                Id = workbookPart.GetIdOfPart(worksheetPart),
+                SheetId = 1,
+                Name = "SalesReport"
+            };
             sheets.Append(sheet);
 
             workbookPart.Workbook.Save();
@@ -148,21 +199,19 @@
         await IJS.InvokeVoidAsync("downloadFile", "SalesReport.xlsx", base64);
     }
 
-    private async Task GetSales()
+    private async Task FetchData<T>(string endpoint, Action<T> assignResult)
     {
         try
         {
-            using (var client = new HttpClient())
+            using var client = new HttpClient { BaseAddress = new Uri(Nav.BaseUri) };
+            var response = await client.GetAsync(endpoint);
+            if (response.IsSuccessStatusCode)
             {
-                client.BaseAddress = new Uri($"{Nav.BaseUri}");
-                var response = await client.GetAsync($"api/Purchase/GetPurchase");
-                if (response.IsSuccessStatusCode)
-                {
-                    await Task.Delay(1000);
-                    var contentResponse = await response.Content.ReadAsStringAsync();
-                    p = JsonConvert.DeserializeObject<purchase[]>(contentResponse);
-                    StateHasChanged();
-                }
+                if (endpoint.Contains("GetPurchase")) await Task.Delay(1000); // Simulated delay
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<T>(content);
+                assignResult(result);
+                StateHasChanged();
             }
         }
         catch (Exception ex)
@@ -171,4 +220,9 @@
             StateHasChanged();
         }
     }
+  private Task GetSales() => FetchData<purchase[]>("api/Purchase/GetPurchase", data => p = data);
+private Task BestSelling() => FetchData<purchase[]>("api/Purchase/BestSelling", data => _p = data);
+private Task SalesByCashier() => FetchData<purchase[]>("api/Purchase/SalesByCashier", data => salesByCashier = data);
+
+
 }

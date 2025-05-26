@@ -57,6 +57,81 @@ namespace Pos.Services
             return t;
         }
 
+        public async Task<List<purchase>> SalesByCashier()
+        {
+            List<purchase> t = new List<purchase>();
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("SalesByCashier", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    var rdr = await com.ExecuteReaderAsync().ConfigureAwait(false);
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        t.Add(new purchase
+                        {
+                           userID = rdr["userID"].ToString(),
+                           name = rdr["name"].ToString(),
+                           total = Convert.ToDouble(rdr["total"])
+                        });
+                    }
+                    await rdr.CloseAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception (log or rethrow as needed)
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return t;
+        }
+
+        public async Task<List<purchase>> BestSelling()
+        {
+            List<purchase> t = new List<purchase>();
+            using (var con = new MySqlConnection(_constring.GetConnection()))
+            {
+                try
+                {
+                    await con.OpenAsync().ConfigureAwait(false);
+                    var com = new MySqlCommand("BestSelling", con)
+                    {
+                        CommandType = CommandType.StoredProcedure,
+                    };
+                    var rdr = await com.ExecuteReaderAsync().ConfigureAwait(false);
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        t.Add(new purchase
+                        {
+                            code = rdr["code"].ToString(),
+                            name = rdr["name"].ToString(),
+                            quantity = Convert.ToInt32(rdr["quantity"]),
+                           
+                        });
+                    }
+                    await rdr.CloseAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception (log or rethrow as needed)
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                }
+                finally
+                {
+                    await con.CloseAsync().ConfigureAwait(false);
+                }
+            }
+            return t;
+        }
+
         public async Task<double> GetTodaySales()
         {
             using (var con = new MySqlConnection(_constring.GetConnection()))

@@ -209,6 +209,7 @@
         }
         if (u[0].token != null)
         {
+            await Loc.SetItemAsStringAsync("userID", u[0].userID.ToString());
             await Loc.SetItemAsStringAsync("role", u[0].role);
             await Loc.SetItemAsStringAsync("name", u[0].name);
             await Loc.SetItemAsStringAsync("token", u[0].token);

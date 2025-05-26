@@ -68,6 +68,7 @@ namespace Pos.Services
                     {
                         CommandType = CommandType.StoredProcedure,
                     };
+                    com.Parameters.AddWithValue("_userID", t.userID);
                     com.Parameters.AddWithValue("_code", t.code);
                     com.Parameters.AddWithValue("_date", t.date);
                     com.Parameters.AddWithValue("_quantity", t.quantity);

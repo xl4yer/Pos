@@ -2,6 +2,7 @@
 {
     public class temp
     {
+        public string userID { get; set; }
         public int tempID { get; set; }
         public DateTime date { get; set; }
         public string code { get; set; } = "";
